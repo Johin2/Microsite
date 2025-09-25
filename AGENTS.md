@@ -16,6 +16,7 @@ User → Intake UI → Orchestrator → {Classifier → Planner → Estimator �
 * **LLM-backed Agents** run in server actions/Route Handlers.
 * **Supabase** stores requests, plans, tasks, runs, and artifacts.
 * **Vercel** hosts web, creates Preview deployments for PRs, and schedules CRONs (for queues/heartbeats).
+* **Concurrency/Locks:** The Orchestrator ensures only one active auto‑repair attempt per run; additional triggers no‑op or queue.
 * **Git provider (GitHub/GitLab)** is assumed for repo, PRs, and CI. The DevOps agent interacts via REST/GraphQL APIs.
 
 ---
@@ -68,7 +69,7 @@ User → Intake UI → Orchestrator → {Classifier → Planner → Estimator �
 
 * **Inputs:** Project ID, stage, last results.
 * **Outputs:** Next action & agent call; escalation when stuck.
-* **Tools:** Server Action/Route Handler with deterministic state machine; retry & cooldowns.
+* **Tools:** Server Action/Route Handler with deterministic state machine; retry & cooldowns; run‑level locking to prevent concurrent repair cycles.
 
 ### 7) **DevOps Runner Agent**
 
@@ -76,7 +77,7 @@ User → Intake UI → Orchestrator → {Classifier → Planner → Estimator �
 
 * **Inputs:** a repo URL, task spec or failing test/stack trace.
 * **Outputs:** PRs, CI results (passed/failed), artifacts links.
-* **Tools:** Git provider API (create branch/PR, commit), CI API (rerun, read logs), Vercel Deploy Hooks for previews.
+* **Tools:** Git provider API (create branch/PR, commit), CI API (rerun, read logs), Vercel Deploy Hooks for previews. Prefer a GitHub App over PAT for least‑privilege, short‑lived tokens; restrict to an allowlisted set of repos. Supports monorepos (whitelists like `packages/**`).
 
 ### 8) **QA/Test Agent**
 
@@ -112,8 +113,9 @@ User → Intake UI → Orchestrator → {Classifier → Planner → Estimator �
 * **Patch size cap:** e.g., ≤ 400 changed lines or ≤ 20 files per loop.
 * **Time cap:** max N repair cycles (e.g., 6) and 45 minutes wall time per ticket.
 * **Mandatory tests:** All unit + critical e2e must pass. No `--force` merges.
-* **Change review:** If patch size or risk > threshold, require human approval.
+* **Change review:** If patch size or risk > threshold, require human approval. Risk includes touching protected paths (e.g., `.github/workflows/`, `infra/`) or dependency changes.
 * **Secrets handling:** Only env vars from Vercel/Supabase; never write secret literals to repo.
+* **Deny-list rules:** Never delete large swaths of code; never modify CI config unless explicitly allowed; avoid lockfile churn > N lines; package.json dependency changes require explicit flag.
 
 ---
 
@@ -154,6 +156,7 @@ create table if not exists plans (
   risks jsonb,
   acceptance jsonb,
   estimates jsonb,
+  version int default 1,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -186,6 +189,8 @@ create table if not exists runs (
   preview_url text,
   logs text,
   result jsonb,
+  risk_score numeric,
+  error_reason text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -196,8 +201,32 @@ create table if not exists events (
   project_id uuid references projects(id) on delete cascade,
   kind text, -- intake | classification | planning | estimate | task_update | run_update | triage | repair
   payload jsonb,
+  correlation_id text,
+  actor text,
   created_at timestamptz default now()
 );
+
+-- users (roles)
+create table if not exists users (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  role text check (role in ('admin','manager','contributor','viewer')) not null default 'contributor',
+  created_at timestamptz default now()
+);
+
+-- settings (guardrails/config)
+create table if not exists settings (
+  id uuid primary key default gen_random_uuid(),
+  key text unique not null,
+  value jsonb not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Recommended indexes
+create index if not exists idx_tasks_project_id on tasks(project_id);
+create index if not exists idx_runs_task_id on runs(task_id);
+create index if not exists idx_events_project_id on events(project_id);
 ```
 
 ---
@@ -226,6 +255,7 @@ create table if not exists events (
     devops/repair/route.ts       # POST → propose patch & commit (guardrails)
     webhooks/ci/route.ts         # CI webhook (status updates)
     webhooks/vercel/route.ts     # preview deployment status
+    orchestrator/heartbeat/route.ts # GET → retry stuck runs (Cron)
 
 /components
   ProjectTypeBadge.tsx
@@ -279,11 +309,17 @@ create table if not exists events (
 async function step(projectId) {
   const p = await db.project(projectId)
   switch (p.status) {
-    case 'intake': await classify(projectId); return;
-    case 'planning': await plan(projectId); return;
-    case 'estimated': await spawnRuns(projectId); return;
-    case 'executing': await maybeRepairOpenFailures(projectId); return;
-    // ...
+    case 'intake':
+      await classify(projectId); return;
+    case 'classified':
+      await plan(projectId); return;
+    case 'planned':
+      await estimate(projectId); return;
+    case 'estimated':
+      await spawnRuns(projectId); return;
+    case 'executing':
+      await maybeRepairOpenFailures(projectId); return;
+    // ... review → done | blocked
   }
 }
 ```
@@ -363,6 +399,30 @@ async function step(projectId) {
   * `/api/webhooks/ci` — updates `runs.state` + `runs.logs`.
   * `/api/webhooks/vercel` — sets `runs.preview_url`.
 * **Cron (Vercel):** periodic `/api/orchestrator/heartbeat` to retry stuck runs.
+
+---
+
+## CI JSON Artifact Schema (standard)
+
+To enable deterministic QA/Triage/Repair, CI should emit a JSON artifact per run with at least:
+
+```json
+{
+  "job": "build-test",
+  "steps": [
+    { "name": "lint", "status": "failed", "errors": ["..." ] },
+    { "name": "unit", "status": "passed", "failing_test_ids": [] },
+    { "name": "e2e", "status": "failed", "failing_test_ids": ["spec/app.test.ts#adds"] }
+  ],
+  "summary": "2/3 steps passed",
+  "stack_traces": ["... truncated ..."],
+  "type_errors": [],
+  "lint_errors": ["src/x.ts:12: foo is not defined"],
+  "artifacts": { "report_url": "https://..." }
+}
+```
+
+The CI webhook should store this in `runs.result` and keep `runs.logs` succinct.
 
 ---
 
