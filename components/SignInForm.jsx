@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createBrowserSupabaseClient } from '@lib/supabase-browser'
+import { isAllowedEmail } from '@lib/auth-utils'
 
 export function SignInForm() {
   const [email, setEmail] = useState('')
@@ -50,16 +51,25 @@ export function SignInForm() {
     setLoading(true)
     try {
       const supabase = createBrowserSupabaseClient()
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: code.trim(),
         type: 'email'
       })
       if (error) throw error
-      // Determine role and destination
-      const res = await fetch('/api/auth/whoami', { cache: 'no-store' })
-      const who = await res.json().catch(() => ({ isTeam: false }))
-      const target = resolveDestination(Boolean(who?.isTeam))
+      const sessionEmail =
+        data?.user?.email || data?.session?.user?.email || email.trim() || null
+      let isTeamMember = false
+
+      if (sessionEmail) {
+        isTeamMember = isAllowedEmail(sessionEmail)
+      } else {
+        const res = await fetch('/api/auth/whoami', { cache: 'no-store' })
+        const who = await res.json().catch(() => ({ isTeam: false }))
+        isTeamMember = Boolean(who?.isTeam)
+      }
+
+      const target = resolveDestination(isTeamMember)
       setMessage('Signed in successfully. Redirecting…')
       setPhase('done')
       setTimeout(() => {
