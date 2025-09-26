@@ -57,19 +57,28 @@ export function SignInForm() {
         type: 'email'
       })
       if (error) throw error
-      const sessionEmail =
-        data?.user?.email || data?.session?.user?.email || email.trim() || null
-      let isTeamMember = false
-
-      if (sessionEmail) {
-        isTeamMember = isAllowedEmail(sessionEmail)
-      } else {
-        const res = await fetch('/api/auth/whoami', { cache: 'no-store' })
-        const who = await res.json().catch(() => ({ isTeam: false }))
-        isTeamMember = Boolean(who?.isTeam)
+      const session = data?.session
+      if (!session?.access_token || !session?.refresh_token || !session?.expires_at) {
+        throw new Error('Unable to establish a session. Please request a new code and try again.')
       }
-
-      const target = resolveDestination(isTeamMember)
+      const sync = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          accessToken: session.access_token,
+          refreshToken: session.refresh_token,
+          expiresAt: session.expires_at
+        })
+      })
+      if (!sync.ok) {
+        throw new Error('Failed to persist sign-in. Please try again.')
+      }
+      // Determine role and destination
+      const res = await fetch('/api/auth/whoami', { cache: 'no-store' })
+      const who = await res.json().catch(() => ({ isTeam: false }))
+      const target = resolveDestination(Boolean(who?.isTeam))
       setMessage('Signed in successfully. Redirecting…')
       setPhase('done')
       setTimeout(() => {

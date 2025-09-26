@@ -44,6 +44,7 @@ function AuthButtons() {
   async function signOut() {
     const supabase = createBrowserSupabaseClient()
     await supabase.auth.signOut()
+    await fetch('/api/auth/session', { method: 'DELETE' })
     window.location.assign('/')
   }
 
