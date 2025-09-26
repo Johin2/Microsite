@@ -330,23 +330,29 @@ function Field({ label, hint, children, required, error }) {
   const control =
     isValidElement(children)
       ? cloneElement(children, {
-          className: clsx('w-full', error ? 'border-rose-500/60 focus:border-rose-400/70 focus:ring-rose-400/30' : '', children.props.className),
+          className: clsx(
+            'w-full',
+            error ? 'border-rose-500/60 focus:border-rose-400/70 focus:ring-rose-400/30' : '',
+            children.props.className
+          ),
         })
       : children
 
   return (
-    <label className="flex flex-col gap-2">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
-        {label}
-        {required ? <span className="text-white/50"> *</span> : null}
-      </span>
-      {hint ? (
-        <span className="text-xs text-white/50">{hint}</span>
-      ) : (
-        <span aria-hidden="true" className="select-none text-xs opacity-0">
-          placeholder
+    <label className="flex flex-col gap-3">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
+          {label}
+          {required ? <span className="text-white/50"> *</span> : null}
         </span>
-      )}
+        {hint ? (
+          <span className="text-xs text-white/50">{hint}</span>
+        ) : (
+          <span aria-hidden="true" className="select-none text-xs text-transparent">
+            placeholder
+          </span>
+        )}
+      </div>
       {control}
       {error ? <span className="text-xs text-rose-400">{error}</span> : null}
     </label>
