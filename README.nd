@@ -1,0 +1,140 @@
+# Project Ops Microsite Documentation
+
+Project Ops Microsite is a Next.js control tower that turns raw project requests into fully tracked delivery runs, orchestrating AI agents, Supabase persistence, CI pipelines, and a guarded auto-repair loop so work keeps moving until tasks are green.
+
+## System Overview
+- **Flow**: Users submit requests → orchestrator routes through intake, classification, planning, estimation, and execution → DevOps + QA loop runs code, triages failures, and proposes guarded repairs until tests pass.
+- **Runtime**: Next.js App Router pages (React Server Components + Tailwind) handle both the microsite UI and API route endpoints used by server-side agents.
+- **Data**: Supabase stores projects, briefs, plans, tasks, runs, events, and configuration; row-level security is enforced with service role usage limited to server handlers.
+- **Automation**: LLM-backed agents live in `lib/agents/*`, orchestrated by `lib/orchestrator.js`, and supported by DevOps helpers in `lib/devops/runner.js` plus guardrail utilities.
+- **Deployment Targets**: Vercel hosts the web app and cron heartbeat; CI provider webhooks feed execution telemetry into the repair loop.
+
+## Directory Map
+- `app/` – App Router routes.
+  - `/(marketing)` – public landing page promoting the automated project flow.
+  - `/(app)` – authenticated microsite with dashboard, project view, plan editor, task board, and intake form.
+  - `api/` – server endpoints powering agents, orchestrator, tracker, DevOps workflow, and external webhooks.
+- `components/` – reusable Tailwind UI elements (status badges, boards, editors).
+- `lib/` – service layer (agents, orchestrator, Supabase clients, guardrails, DevOps utilities, prompts, schemas, submission store fallback).
+- `supabase/` – SQL migrations, seed scripts, and optional RLS policies.
+- `scripts/` – developer utilities (e.g., `seed.sql`).
+
+## Agent Roster & Responsibilities
+1. **Intake Agent** (`lib/agents/intake.js`): normalizes submissions into a `ProjectBrief`, generates clarifying questions, and hydrates the `briefs` table.
+2. **Classification Agent** (`lib/agents/classification.js`): tags brief with primary/secondary project types and confidence for routing.
+3. **Planning Agent** (`lib/agents/planning.js`): expands briefs into milestone/task structures with acceptance criteria and risks.
+4. **Estimator Agent** (`lib/agents/estimation.js`): adds optimistic/likely/pessimistic effort, confidence scoring, and role breakdowns.
+5. **Tracker Agent** (`app/api/tracker/route.js` + UI): surfaces Kanban board, burndown, and status updates.
+6. **Orchestrator** (`lib/orchestrator.js`): deterministic state machine triggering each agent, seeding tasks, starting runs, and managing run exhaustion.
+7. **DevOps Runner** (`lib/devops/runner.js`): creates Supabase `runs`, maps to branches/PRs, and monitors attempt counts.
+8. **QA/Test Agent** (implicit in repair loop): consumes CI JSON artefacts to issue verdicts.
+9. **Issue Triage Agent** (`lib/agents/triage.js`): distills failing CI logs into actionable root causes and QA focus points.
+10. **Auto-Repair Agent** (`lib/agents/repair.js`): proposes minimal diffs subject to guardrail validation, enumerating tests to rerun and stop conditions.
+11. **Comms Agent (optional)**: reserved for Slack/email digests.
+
+## Workflow Walkthrough
+1. **Intake**: `/new` form posts to `/api/intake`, creating project + brief, logging an intake event, and advancing the orchestrator.
+2. **Classification**: orchestrator moves `projects.status` to `planning`, writes classification event.
+3. **Planning**: LLM (or fallback heuristic) generates milestones/tasks, stored in `plans` and versioned.
+4. **Estimation**: tasks pick up estimate metadata, tasks are inserted into `tasks` table, project enters `executing`.
+5. **Execution**: backlog tasks automatically spawn runs via `startRun`. CI/Vercel webhooks update run + task states.
+6. **Failure Loop**: triage endpoint saves CI logs, marks tasks blocked, and triggers auto-repair proposals while enforcing guardrails and attempt caps.
+7. **Completion**: when all tasks reach `review`/`done`, orchestrator transitions project to `review`, awaiting human approval before `done`.
+
+## Data Model Highlights
+- `projects`: master record per engagement with status pipeline (`intake` → `planning` → `estimated` → `executing` → `review` → `done/blocked`).
+- `briefs`: narrative summaries, scope, constraints, success criteria, and attachments generated at intake.
+- `plans`: milestone/task tree, risks, acceptance tests, and estimates snapshot.
+- `tasks`: operational units with status, acceptance criteria, dependencies, and estimates.
+- `runs`: DevOps attempts with CI/preview links, logs, guardrail results, and risk scores.
+- `events`: immutable audit trail capturing agent actions, triage summaries, and repair proposals.
+- `users` & `settings`: roles and guardrail configuration (optional).
+
+## Environment Variables
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL shared by browser/server clients. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anonymous key for client-side Supabase operations. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side key for privileged reads/writes from API routes. |
+| `OPENAI_API_KEY` | Enables LLM-backed agent prompts. When absent, fallback heuristics run. |
+| `OPENAI_MODEL` | Override for OpenAI chat model (default `gpt-4o-mini`). |
+| `GIT_TOKEN` | Token for DevOps runner to create branches/PRs via Git provider. |
+| `VERCEL_DEPLOY_HOOK_URL` | Trigger URL for Vercel preview re-deployments tied to runs. |
+| `CI_API_TOKEN` | Auth token for CI provider API interactions. |
+
+## Local Development
+1. Install dependencies: `pnpm install`
+2. Copy environment template: `cp .env.example .env.local`
+3. Fill env vars (Supabase, OpenAI, Git, CI, Vercel)
+4. Apply Supabase schema: `supabase db reset --schema supabase/migrations`
+5. Seed demo data (optional): `supabase db query < scripts/seed.sql`
+6. Launch dev server: `pnpm dev`
+
+## Deployment Notes
+- Deploy via Vercel; configure environment variables and `cron` job calling `/api/orchestrator/heartbeat`.
+- CI provider must `POST` to `/api/webhooks/ci` with run status updates and optional logs.
+- Vercel deploy hooks should `POST` to `/api/webhooks/vercel` to sync preview URLs.
+- Guardrails require repo whitelists and attempt caps; adjust defaults via `settings` table as needed.
+
+## Guardrails & Safety Nets
+- **Patch Scope**: `lib/guardrails.js` restricts auto-repair to `app/`, `components/`, `lib/`, `tests/` and enforces ≤20 files and ≤400 changed lines.
+- **Attempt Caps**: `MAX_REPAIR_ATTEMPTS` (default 6) prevents runaway loops; orchestrator stops requesting repairs when exhausted.
+- **Time Caps**: `MAX_RUN_MINUTES` (45) informs external job runners of wall-clock limits.
+- **Manual Escalation**: proposals with `stop: true` or guardrail failures surface to humans via events log.
+
+## API Reference
+Each endpoint lives under `app/api/*` and returns JSON. Unless otherwise noted, authentication is assumed to be handled upstream (e.g., middleware or server-only calls).
+
+### Orchestration & Core Agents
+| Method | Path | Description | Request Body | Response |
+| --- | --- | --- | --- | --- |
+| `POST` | `/api/intake` | Validates intake form, generates brief via Intake agent, writes `projects`/`briefs`, logs event, and advances orchestrator. | `{ title, description, categoryHint?, dueDate?, ownerEmail?, attachments?[] }` | `{ projectId, brief, next }`
+| `POST` | `/api/classify` | Forces orchestrator to run classification stage for an existing project. | `{ projectId }` | `{ projectId, status, action?, notes? }`
+| `POST` | `/api/plan` | Runs planning stage for the project (LLM work plan → Supabase `plans`). | `{ projectId }` | `{ projectId, status: 'estimated', action: 'planning' }`
+| `POST` | `/api/estimate` | Triggers estimation + task seeding stage, transitioning project to `executing`. | `{ projectId }` | `{ projectId, status: 'executing', action: 'estimation' }`
+| `POST` | `/api/orchestrator/heartbeat` | Vercel cron endpoint that iterates active projects and advances the orchestrator state machine. | none | `{ results: [ { projectId, status, action?, notes?, error? } ] }`
+
+### Tracker & Tasks
+| Method | Path | Description | Request Body | Response |
+| --- | --- | --- | --- | --- |
+| `GET` | `/api/tracker` | Returns Kanban-style board grouped by task status plus raw tasks. Requires `projectId` query string. | none (query `?projectId=<uuid>`) | `{ board: { backlog[], in_progress[], review[], done[], blocked[] }, tasks }`
+| `POST` | `/api/tracker` | Updates a task status (e.g., drag-and-drop board change) and stamps `updated_at`. | `{ taskId, status }` (`status` ∈ backlog/in_progress/review/done/blocked) | `{ ok: true }`
+
+### DevOps & Repair Loop
+| Method | Path | Description | Request Body | Response |
+| --- | --- | --- | --- | --- |
+| `POST` | `/api/devops/run` | Creates a new run attempt for a task, incrementing attempt counter and returning run metadata. | `{ taskId, metadata? }` | `{ run: { id, taskId, state, attempt, branch?, prUrl?, ... } }`
+| `POST` | `/api/devops/triage` | Saves failing CI logs, marks run `failed`, blocks task, and invokes Triage agent for root-cause analysis. | `{ runId, ciLog, failingTests?[] }` | `{ triage: { rootCause, impactedFiles, proposedFix, riskLevel, qaFocus } }`
+| `POST` | `/api/devops/repair` | Calls Auto-Repair agent with triage context; enforces guardrails, updates run state, and logs repair event. | `{ runId, triage }` | `{ proposal: { summary, files[], tests[], stop } }`
+
+### External Webhooks
+| Method | Path | Description | Request Body | Response |
+| --- | --- | --- | --- | --- |
+| `POST` | `/api/webhooks/ci` | CI provider callback updating run state, CI URL, preview URL, and logs; adjusts task status to `review` or `blocked` accordingly. | `{ runId, status ('queued'|'running'|'passed'|'failed'), ciUrl?, logs?, previewUrl? }` | `{ ok: true }`
+| `POST` | `/api/webhooks/vercel` | Vercel deploy hook storing preview URL/status and emitting run update event. | `{ runId, previewUrl, status ('ready'|'building'|'error') }` | `{ ok: true }`
+
+### Submission Microsite APIs
+| Method | Path | Description | Request Body | Response |
+| --- | --- | --- | --- | --- |
+| `GET` | `/api/submissions` | Lists recent submissions from Supabase (fallback in-memory store when offline). | none | `{ submissions: [ { id, name, email, status, createdAt, metadata, details } ] }`
+| `POST` | `/api/submissions` | Creates a submission, mapping metadata into Supabase `projects` + `briefs`, or storing in-memory fallback. | `{ name, email, details, metadata? }` | `{ submission }` (201 on success)
+| `GET` | `/api/submissions/[id]` | Fetches a single submission by UUID. | none | `{ submission }` or 404 when missing.
+| `PATCH` | `/api/submissions/[id]` | Updates submission status (`pending`/`accepted`/`rejected`) via Supabase or fallback store. | `{ status }` | `{ submission }` (updated) or 404.
+
+## Front-End Highlights
+- **Intake Form (`/app/(app)/new`)**: collects title, description, category hint, due date, attachments, and streams generated brief preview.
+- **Dashboard (`/app/(app)/dashboard`)**: filterable list of projects with type badges, status pills, and due date highlights.
+- **Project Detail (`/app/(app)/projects/[id]`)**: tabs for Brief, Plan, Tracker, and Runs, including `PlanTree` and `RunTimeline` components.
+- **Task Detail (`/app/(app)/tasks/[id]`)**: shows acceptance criteria, run history, CI logs, preview links, and repair attempts.
+- **Marketing Landing (`/app/(marketing)/page.tsx`)**: outlines the intake-to-auto-repair story for prospective users.
+
+## Testing & Quality Gates
+- `pnpm lint` – ESLint + TypeScript checks.
+- `pnpm test` or framework-specific suites (Vitest/Playwright) under `tests/` to validate critical flows.
+- Auto-repair proposals must enumerate tests; orchestrator treats missing test runs as failures.
+
+## Operational Telemetry
+- `events` table acts as immutable audit log for agent decisions and state transitions.
+- Dashboard surfaces burndown and blockers using Supabase change feeds and `tracker` API.
+- Heartbeat endpoint can be scheduled for retries, ensuring tasks do not stall due to transient webhook failures.
+

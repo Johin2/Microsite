@@ -14,7 +14,7 @@ Next.js (App Router) control tower that intakes project requests, auto-classifie
 
 1. Install dependencies
    ```bash
-   pnpm install
+   npm install
    ```
 2. Copy environment variables
    ```bash
