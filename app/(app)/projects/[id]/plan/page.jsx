@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { requireTeamUser } from '@lib/auth'
 
 import { findSubmission } from '@lib/submission-store'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ProjectPlanPage({ params }) {
+  await requireTeamUser(`/projects/${params.id}/plan`)
   const submission = await findSubmission(params.id)
 
   if (!submission) {

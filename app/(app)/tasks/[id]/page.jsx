@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { requireTeamUser } from '@lib/auth'
 
 import { createServiceSupabaseClient } from '@lib/supabase'
 import { RunTimeline } from '@components/RunTimeline'
@@ -7,6 +8,7 @@ import { StatusPill } from '@components/StatusPill'
 import { RunTaskButton } from '@components/RunTaskButton'
 
 export default async function TaskPage({ params }) {
+  await requireTeamUser()
   const supabase = createServiceSupabaseClient()
 
   const { data: task } = await supabase.from('tasks').select('*').eq('id', params.id).single()

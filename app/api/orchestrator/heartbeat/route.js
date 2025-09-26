@@ -29,3 +29,8 @@ export async function POST() {
 
   return NextResponse.json({ results })
 }
+
+// Support GET for compatibility with CRONs and spec
+export async function GET() {
+  return POST()
+}

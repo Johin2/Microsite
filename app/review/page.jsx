@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 
 import { StatusPill } from '@components/StatusPill'
 
+// This route is team-only; server redirect is handled by Dashboard/Projects pages.
+// The Review page is client-side, so we keep content minimal and rely on server-side guards
+// on the list/detail pages. Optionally, migrate this to a server page to enforce auth.
 export default function ReviewPage() {
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)

@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { requireTeamUser } from '@lib/auth'
 
 import { findSubmission } from '@lib/submission-store'
 import { ProjectTypeBadge } from '@components/ProjectTypeBadge'
@@ -10,6 +11,7 @@ import { CheckCircle } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export default async function ProjectPage({ params }) {
+  await requireTeamUser(`/projects/${params.id}`)
   const submission = await findSubmission(params.id)
 
   if (!submission) {
@@ -120,5 +122,5 @@ function Metadata({ label, value, asRow = true }) {
 
 function formatTimestamp(value) {
   const date = new Date(value)
-  return date.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }

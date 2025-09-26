@@ -86,15 +86,26 @@ export function IntakeForm() {
     return /^[+()\d\s-]{7,}$/.test(value.trim())
   }
 
+  function ensureHttpScheme(url) {
+    if (!url) return url
+    const trimmed = url.trim()
+    if (!trimmed) return trimmed
+    // If missing scheme, default to https:// for user convenience
+    if (!/^https?:\/\//i.test(trimmed)) {
+      return `https://${trimmed}`
+    }
+    return trimmed
+  }
+
   function validateUrls(value) {
     if (!value.trim()) return true
     return value
       .split(',')
-      .map((item) => item.trim())
+      .map((item) => ensureHttpScheme(item))
       .filter(Boolean)
-      .every((url) => {
+      .every((candidate) => {
         try {
-          new URL(url)
+          new URL(candidate)
           return true
         } catch (err) {
           return false
@@ -129,9 +140,18 @@ export function IntakeForm() {
     setError(null)
     setShowSuccess(false)
 
-    if (!validateStep(step)) {
-      return
+    // Ensure all steps are valid before submitting (users might edit earlier steps)
+    function validateAll() {
+      for (let i = 0; i < sections.length; i++) {
+        if (!validateStep(i)) {
+          setStep(i)
+          return false
+        }
+      }
+      return true
     }
+
+    if (!validateAll()) return
 
     setLoading(true)
 
@@ -569,5 +589,8 @@ function parseReferences(value) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-    .map((url, index) => ({ url, name: `Reference ${index + 1}` }))
+    .map((raw, index) => {
+      const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+      return { url, name: `Reference ${index + 1}` }
+    })
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { requireTeamUser } from '@lib/auth'
 import { formatDistanceToNow } from 'date-fns'
 
 import { listSubmissions } from '@lib/submission-store'
@@ -8,6 +9,7 @@ import { StatusPill } from '@components/StatusPill'
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage({ searchParams }) {
+  await requireTeamUser('/dashboard')
   const submissions = await listSubmissions()
   const filters = mapFilters(searchParams)
   const filtered = submissions.filter((submission) => filterSubmission(submission, filters))
@@ -183,8 +185,9 @@ function mapFilters(searchParams = {}) {
 function filterSubmission(submission, filters) {
   if (filters.status && submission.status !== filters.status) return false
   if (filters.type) {
-    const projectType = submission.metadata?.projectType ?? 'other'
-    if (projectType !== filters.type) return false
+    const projectType = (submission.metadata?.projectType || 'other').toLowerCase()
+    const desired = filters.type.toLowerCase()
+    if (projectType !== desired) return false
   }
   if (filters.query) {
     const haystack = `${submission.metadata?.projectTitle ?? ''} ${submission.metadata?.clientName ?? ''} ${submission.email}`.toLowerCase()
@@ -194,7 +197,7 @@ function filterSubmission(submission, filters) {
 }
 
 function formatSubmittedDate(value) {
-  return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(value).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function formatSubmittedRelative(value) {
