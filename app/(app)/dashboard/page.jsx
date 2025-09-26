@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
 
 import { listSubmissions } from '@lib/submission-store'
 import { ProjectTypeBadge } from '@components/ProjectTypeBadge'
@@ -6,8 +7,11 @@ import { StatusPill } from '@components/StatusPill'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }) {
   const submissions = await listSubmissions()
+  const filters = mapFilters(searchParams)
+  const filtered = submissions.filter((submission) => filterSubmission(submission, filters))
+
   const total = submissions.length
   const accepted = submissions.filter((item) => item.status === 'accepted')
   const pending = submissions.filter((item) => item.status === 'pending')
@@ -39,8 +43,9 @@ export default async function DashboardPage() {
       <section className="overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_34px_82px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-8 py-6">
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-white">Submission Portfolio</h2>
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Latest requests sorted by status</p>
+            <h2 className="text-lg font-semibold text-white">Submission portfolio</h2>
+            <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Filter and triage current engagements</p>
+            <Filters filters={filters} />
           </div>
           <Link
             href="/new"
@@ -58,10 +63,11 @@ export default async function DashboardPage() {
                 <th className="px-8 py-4 text-left">Status</th>
                 <th className="px-8 py-4 text-left">Owner</th>
                 <th className="px-8 py-4 text-left">Submitted</th>
+                <th className="px-8 py-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/8 text-sm text-slate-200/85">
-              {submissions.map((submission) => (
+              {filtered.map((submission) => (
                 <tr key={submission.id} className="transition duration-200 hover:bg-white/[0.06]">
                   <td className="px-8 py-5">
                     <Link className="font-semibold text-white hover:text-primary" href={`/projects/${submission.id}`}>
@@ -79,9 +85,37 @@ export default async function DashboardPage() {
                     <span className="block text-white/80">{submission.metadata?.clientName ?? '—'}</span>
                     <span className="text-xs text-white/50">{submission.email}</span>
                   </td>
-                  <td className="px-8 py-5 text-slate-400">{new Date(submission.createdAt).toLocaleDateString()}</td>
+                  <td className="px-8 py-5 text-slate-400">
+                    <div className="flex flex-col">
+                      <span>{formatSubmittedDate(submission.createdAt)}</span>
+                      <span className="text-xs text-slate-500">{formatSubmittedRelative(submission.createdAt)}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5">
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/projects/${submission.id}`}
+                        className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/70 transition hover:bg-white/20 hover:text-white"
+                      >
+                        Review
+                      </Link>
+                      <Link
+                        href={`/projects/${submission.id}/plan`}
+                        className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/70 transition hover:bg-white/20 hover:text-white"
+                      >
+                        Open Plan
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
+              {filtered.length === 0 ? (
+                <tr>
+                  <td className="px-8 py-6 text-center text-sm text-slate-400" colSpan={6}>
+                    No submissions match the current filters.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -106,4 +140,67 @@ function MetricCard({ title, value, description, accent }) {
       </div>
     </div>
   )
+}
+
+function Filters({ filters }) {
+  return (
+    <form className="mt-4 flex flex-col gap-3 text-xs text-white/70 md:flex-row md:items-center" action="/dashboard" method="get">
+      <input
+        type="search"
+        name="q"
+        defaultValue={filters.query}
+        placeholder="Search client, project, or email"
+      />
+      <select name="status" defaultValue={filters.status} className="min-w-[150px]">
+        <option value="">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="accepted">Accepted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <select name="type" defaultValue={filters.type} className="min-w-[180px]">
+        <option value="">All project types</option>
+        <option value="Brand identity">Brand identity</option>
+        <option value="Campaign">Campaign</option>
+        <option value="Digital product">Digital product</option>
+        <option value="Spatial / retail">Spatial / retail</option>
+        <option value="Launch strategy">Launch strategy</option>
+        <option value="other">Other</option>
+      </select>
+      <button type="submit" className="rounded-full border border-white/15 bg-white/10 px-3 py-2 text-white/70">
+        Apply
+      </button>
+    </form>
+  )
+}
+
+function mapFilters(searchParams = {}) {
+  const status = typeof searchParams.status === 'string' ? searchParams.status.trim() : ''
+  const type = typeof searchParams.type === 'string' ? searchParams.type.trim() : ''
+  const query = typeof searchParams.q === 'string' ? searchParams.q.trim().toLowerCase() : ''
+  return { status, type, query }
+}
+
+function filterSubmission(submission, filters) {
+  if (filters.status && submission.status !== filters.status) return false
+  if (filters.type) {
+    const projectType = submission.metadata?.projectType ?? 'other'
+    if (projectType !== filters.type) return false
+  }
+  if (filters.query) {
+    const haystack = `${submission.metadata?.projectTitle ?? ''} ${submission.metadata?.clientName ?? ''} ${submission.email}`.toLowerCase()
+    if (!haystack.includes(filters.query)) return false
+  }
+  return true
+}
+
+function formatSubmittedDate(value) {
+  return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function formatSubmittedRelative(value) {
+  try {
+    return formatDistanceToNow(new Date(value), { addSuffix: true })
+  } catch (error) {
+    return '—'
+  }
 }

@@ -23,20 +23,25 @@ export default async function ProjectPlanPage({ params }) {
             Plan • {submission.metadata?.projectTitle ?? submission.name}
           </h1>
           <p className="text-sm text-slate-300/85">
-            Automated planning is disabled in this simplified workspace, but the full system spins briefs into milestones, tasks, and acceptance criteria powered by dedicated agents.
+            Automated planning is disabled in this simplified workspace. Enable the agent pipeline to generate milestones, dependencies, and acceptance tests automatically.
           </p>
         </div>
-        <Link
-          href={`/projects/${submission.id}`}
-          className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:text-white"
-        >
-          ← Back to Project
-        </Link>
+        <div className="flex items-center gap-3">
+          <button className="rounded-full border border-white/15 bg-white/10 px-5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/20">
+            Enable agents
+          </button>
+          <Link
+            href={`/projects/${submission.id}`}
+            className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:text-white"
+          >
+            ← Back to Project
+          </Link>
+        </div>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h2 className="text-lg font-semibold text-white">How the planner behaves</h2>
+          <h2 className="text-lg font-semibold text-white">Agent capabilities</h2>
           <ul className="mt-4 space-y-3 text-slate-300/90">
             <li className="flex items-start gap-3">
               <span className="mt-1 h-2 w-2 flex-none rounded-full bg-white/60" aria-hidden="true" />
@@ -52,11 +57,19 @@ export default async function ProjectPlanPage({ params }) {
             </li>
           </ul>
         </article>
-        <article className="rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f1014]/95 via-[#121317]/90 to-[#15161b]/95 p-6 text-sm text-slate-200/85 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Enable full workflow</h3>
-          <p className="mt-4 leading-relaxed text-slate-300/85">
-            Deploy the complete microsite to Vercel with Supabase connected and the orchestrator enabled. Once plumbed in, the plan view will show generated milestones, timeline heatmaps, and auto-repair attempts per task.
+        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Export brief</h3>
+          <p className="text-sm text-slate-300/85">
+            Download the intake summary to share with stakeholders before agents take over.
           </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs text-white/70 hover:bg-white/20">
+              Download PDF
+            </button>
+            <button className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs text-white/70 hover:bg-white/20">
+              Email summary
+            </button>
+          </div>
         </article>
       </section>
     </div>

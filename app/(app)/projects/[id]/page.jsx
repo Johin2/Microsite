@@ -1,9 +1,11 @@
+import clsx from 'clsx'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { findSubmission } from '@lib/submission-store'
 import { ProjectTypeBadge } from '@components/ProjectTypeBadge'
 import { StatusPill } from '@components/StatusPill'
+import { CheckCircle } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,10 +28,11 @@ export default async function ProjectPage({ params }) {
               </h1>
               <ProjectTypeBadge type={submission.metadata?.projectType ?? 'other'} />
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
-              <StatusPill status={submission.status} />
-              <span>Client: {submission.metadata?.clientName ?? submission.email}</span>
-              {submission.metadata?.keyMoment ? <span>Key moment {submission.metadata.keyMoment}</span> : null}
+            <div className="grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+              <Metadata label="Status" value={<StatusPill status={submission.status} />} asRow={false} />
+              <Metadata label="Client" value={submission.metadata?.clientName ?? submission.email} />
+              <Metadata label="Investment" value={submission.metadata?.budget ?? '—'} />
+              <Metadata label="Key moment" value={submission.metadata?.keyMoment ?? '—'} />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -48,17 +51,17 @@ export default async function ProjectPage({ params }) {
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h2 className="text-lg font-semibold text-white">Request Details</h2>
+          <h2 className="text-lg font-semibold text-white">Request details</h2>
           <p className="mt-4 whitespace-pre-line leading-relaxed text-slate-300/90">{submission.details}</p>
         </article>
         <article className="space-y-4 rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Metadata</h3>
-          <Metadata label="Client" value={submission.metadata?.clientName ?? '—'} />
-          <Metadata label="Project type" value={submission.metadata?.projectType ?? '—'} />
-          <Metadata label="Investment" value={submission.metadata?.budget ?? '—'} />
-          <Metadata label="Key moment" value={submission.metadata?.keyMoment ?? '—'} />
-          <Metadata label="Created" value={new Date(submission.createdAt).toLocaleString()} />
-          <Metadata label="Last updated" value={new Date(submission.updatedAt).toLocaleString()} />
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Project metadata</h3>
+          <Metadata label="Company" value={submission.metadata?.company ?? '—'} />
+          <Metadata label="Contact" value={submission.email} />
+          <Metadata label="Timeline" value={submission.metadata?.timeline ?? '—'} />
+          <Metadata label="Referral" value={submission.metadata?.referralSource ?? '—'} />
+          <Metadata label="Created" value={formatTimestamp(submission.createdAt)} />
+          <Metadata label="Updated" value={formatTimestamp(submission.updatedAt)} />
         </article>
       </section>
 
@@ -79,22 +82,43 @@ export default async function ProjectPage({ params }) {
             <p className="mt-4 text-xs text-slate-500">No attachments provided.</p>
           )}
         </article>
-        <article className="rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f1014]/95 via-[#121317]/90 to-[#15161b]/95 p-6 text-sm text-slate-200/85 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Workflow status</h3>
-          <p className="mt-4 leading-relaxed text-slate-300/85">
-            This simplified workspace tracks intake submissions. Use the review console to accept or reject the request. The production build connects to the agent pipeline for planning, estimation, and auto-repair.
-          </p>
+        <article className="space-y-4 rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f1014]/95 via-[#121317]/90 to-[#15161b]/95 p-6 text-sm text-slate-200/85 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Next steps</h3>
+          <ul className="space-y-3 text-sm text-slate-300/90">
+            <li className="flex items-start gap-3">
+              <CheckCircle className="mt-1 h-4 w-4 text-white/60" />
+              <span>Schedule discovery call with {submission.metadata?.clientName ?? 'client'}.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle className="mt-1 h-4 w-4 text-white/60" />
+              <span>Prepare recommendation on brand, campaign, or experience approach.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle className="mt-1 h-4 w-4 text-white/60" />
+              <span>Confirm investment posture and align the key launch moment.</span>
+            </li>
+          </ul>
         </article>
       </section>
     </div>
   )
 }
 
-function Metadata({ label, value }) {
+function Metadata({ label, value, asRow = true }) {
   return (
-    <p className="flex items-center justify-between gap-4 text-slate-300/90">
+    <div
+      className={clsx(
+        'flex gap-4 text-slate-300/90',
+        asRow ? 'items-center justify-between' : 'flex-col items-start'
+      )}
+    >
       <span className="text-[11px] uppercase tracking-[0.28em] text-slate-500">{label}</span>
-      <span className="text-sm font-medium text-slate-200">{value}</span>
-    </p>
+      <span className="text-sm font-medium text-slate-200">{value || '—'}</span>
+    </div>
   )
+}
+
+function formatTimestamp(value) {
+  const date = new Date(value)
+  return date.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
