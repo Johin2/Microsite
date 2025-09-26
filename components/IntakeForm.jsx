@@ -1,7 +1,8 @@
 'use client'
 
+import clsx from 'clsx'
 import Link from 'next/link'
-import { useState } from 'react'
+import { cloneElement, isValidElement, useState } from 'react'
 
 const defaultForm = {
   clientName: '',
@@ -321,6 +322,13 @@ function FormBlock({ title, description, children }) {
 }
 
 function Field({ label, hint, children, required }) {
+  const control =
+    isValidElement(children)
+      ? cloneElement(children, {
+          className: clsx('w-full', children.props.className),
+        })
+      : children
+
   return (
     <label className="flex flex-col gap-2">
       <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
@@ -328,7 +336,7 @@ function Field({ label, hint, children, required }) {
         {required ? <span className="text-white/50"> *</span> : null}
       </span>
       {hint ? <span className="text-xs text-white/50">{hint}</span> : null}
-      {children}
+      {control}
     </label>
   )
 }
