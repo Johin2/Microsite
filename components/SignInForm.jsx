@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createBrowserSupabaseClient } from '@lib/supabase-browser'
+import { isAllowedEmail } from '@lib/auth-utils'
 
 export function SignInForm() {
   const [email, setEmail] = useState('')
@@ -153,13 +154,28 @@ export function SignInForm() {
 }
 
 function resolveDestination(isTeam) {
+  const fallback = isTeam ? '/dashboard' : '/my'
+
   try {
     const url = new URL(window.location.href)
     const next = url.searchParams.get('next')
-    if (next) {
+    if (typeof next === 'string' && isAllowedNext(next, isTeam)) {
       return next
     }
   } catch {}
 
-  return isTeam ? '/dashboard' : '/'
+  return fallback
+}
+
+function isAllowedNext(next, isTeam) {
+  if (!next || !next.startsWith('/') || next.startsWith('//')) {
+    return false
+  }
+
+  if (isTeam) {
+    return true
+  }
+
+  const teamOnlyPrefixes = ['/dashboard', '/projects', '/tasks', '/new']
+  return !teamOnlyPrefixes.some((prefix) => next.startsWith(prefix))
 }
