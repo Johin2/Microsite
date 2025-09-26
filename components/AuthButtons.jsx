@@ -55,7 +55,7 @@ function AuthButtons() {
             href={isTeam ? '/dashboard' : '/my'}
             className="rounded-full border border-white/15 bg-white/10 px-3 py-1 font-semibold text-white/80 hover:bg-white/20 hover:text-white"
           >
-            {isTeam ? 'Dashboard' : 'My projects'}
+            {isTeam ? '' : 'My projects'}
           </Link>
           <button
             type="button"
