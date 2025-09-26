@@ -11,7 +11,7 @@ const Schema = z.object({
   previewUrl: z.string().url().optional()
 })
 
-export async function POST(request: Request) {
+export async function POST(request) {
   const payload = Schema.parse(await request.json())
   const supabase = createServiceSupabaseClient()
 
@@ -27,8 +27,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: runError?.message ?? 'run not found' }, { status: 404 })
   }
 
-  const tasksRelation = run.tasks as any
-  const projectId = Array.isArray(tasksRelation) ? tasksRelation[0]?.project_id ?? null : tasksRelation?.project_id ?? null
+  const tasksRelation = run.tasks
+  const projectId = Array.isArray(tasksRelation)
+    ? tasksRelation[0]?.project_id ?? null
+    : tasksRelation?.project_id ?? null
 
   await supabase
     .from('runs')

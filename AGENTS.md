@@ -9,7 +9,7 @@ This document defines the agentic architecture, roles, tools, routing, data mode
 ## High-Level System
 
 ```
-User → Intake UI → Orchestrator → {Classifier → Planner → Estimator → Tracker → DevOps Runner → QA/Test → Triage → Repair Loop} → Team Views
+User → Intake UI → Orchestrator → {Classifier → Planner → Estimator → Tracker → DevOps Runner → QA/Test → Triage → Repair Loop} → Team Views, Always run the project and check if there are any errors if there are errors then fix it
 ```
 
 * **Next.js (App Router)** serves UI + API routes.

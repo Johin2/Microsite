@@ -15,18 +15,16 @@ import { generateProjectBrief, triageFailure, proposeRepair } from '@lib/agents'
 import { orchestratorStep } from '@lib/orchestrator'
 import { startRun } from '@lib/devops/runner'
 
-const serviceSupabaseMock: any = createServiceSupabaseClient
-const generateProjectBriefMock: any = generateProjectBrief
-const triageFailureMock: any = triageFailure
-const proposeRepairMock: any = proposeRepair
-const orchestratorStepMock: any = orchestratorStep
-const startRunMock: any = startRun
+const serviceSupabaseMock = createServiceSupabaseClient
+const generateProjectBriefMock = generateProjectBrief
+const triageFailureMock = triageFailure
+const proposeRepairMock = proposeRepair
+const orchestratorStepMock = orchestratorStep
+const startRunMock = startRun
 
-type TableFactory = () => Record<string, any>
-
-function createSupabaseMock(map: Record<string, TableFactory>) {
+function createSupabaseMock(map) {
   return {
-    from: vi.fn((table: string) => {
+    from: vi.fn((table) => {
       const factory = map[table]
       if (!factory) {
         throw new Error(`Unexpected table: ${table}`)
@@ -36,7 +34,7 @@ function createSupabaseMock(map: Record<string, TableFactory>) {
   }
 }
 
-function jsonRequest(url: string, body: unknown) {
+function jsonRequest(url, body) {
   return new Request(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -59,7 +57,7 @@ describe('api/intake', () => {
         projects: () => ({ insert: insertProjects }),
         briefs: () => ({ insert: insertBriefs }),
         events: () => ({ insert: insertEvents })
-      }) as any
+      })
     )
 
     const brief = {
@@ -73,7 +71,7 @@ describe('api/intake', () => {
       attachments: []
     }
 
-    generateProjectBriefMock.mockResolvedValue(brief as any)
+    generateProjectBriefMock.mockResolvedValue(brief)
     orchestratorStepMock.mockResolvedValue({ status: 'planning' })
 
     const response = await intakePost(
@@ -159,7 +157,7 @@ describe('api/tracker', () => {
     serviceSupabaseMock.mockReturnValue(
       createSupabaseMock({
         tasks: () => ({ select })
-      }) as any
+      })
     )
 
     const response = await trackerGet(
@@ -180,7 +178,7 @@ describe('api/tracker', () => {
     serviceSupabaseMock.mockReturnValue(
       createSupabaseMock({
         tasks: () => ({ update })
-      }) as any
+      })
     )
 
     const response = await trackerPost(
@@ -231,7 +229,7 @@ describe('api/devops/triage', () => {
         runs: () => ({ select: runsSelect, update: runsUpdate }),
         tasks: () => ({ update: tasksUpdate }),
         events: () => ({ insert: eventsInsert })
-      }) as any
+      })
     )
 
     triageFailureMock.mockResolvedValue({ summary: 'failed build' })
@@ -267,7 +265,7 @@ describe('api/devops/repair', () => {
       createSupabaseMock({
         runs: () => ({ select: runsSelect, update: runsUpdate }),
         events: () => ({ insert: eventsInsert })
-      }) as any
+      })
     )
 
     proposeRepairMock.mockResolvedValue({ stop: false, patch: [] })
@@ -301,7 +299,7 @@ describe('api/orchestrator/heartbeat', () => {
     serviceSupabaseMock.mockReturnValue(
       createSupabaseMock({
         projects: () => ({ select })
-      }) as any
+      })
     )
 
     orchestratorStepMock.mockImplementation(() => Promise.resolve({ projectId: 'handled' }))
@@ -332,7 +330,7 @@ describe('api/webhooks/ci', () => {
         runs: () => ({ select: runsSelect, update: runsUpdate }),
         tasks: () => ({ update: tasksUpdate }),
         events: () => ({ insert: eventsInsert })
-      }) as any
+      })
     )
 
     const response = await ciWebhookPost(
@@ -365,7 +363,7 @@ describe('api/webhooks/vercel', () => {
       createSupabaseMock({
         runs: () => ({ select: runsSelect, update: runsUpdate }),
         events: () => ({ insert: eventsInsert })
-      }) as any
+      })
     )
 
     const response = await vercelWebhookPost(
@@ -405,7 +403,7 @@ describe('devops guardrails', () => {
       createSupabaseMock({
         runs: () => ({ select: runsSelect, update: runsUpdate }),
         events: () => ({ insert: eventsInsert })
-      }) as any
+      })
     )
 
     proposeRepairMock.mockResolvedValue({ stop: true })
@@ -445,7 +443,7 @@ describe('executing stage helpers', () => {
         runs: () => ({ select: runsSelect, update: runsUpdate }),
         tasks: () => ({ update: tasksUpdate }),
         events: () => ({ insert: eventsInsert })
-      }) as any
+      })
     )
 
     triageFailureMock.mockResolvedValue({ summary: 'type error' })
@@ -473,7 +471,7 @@ describe('runs exhaustion check', () => {
     serviceSupabaseMock.mockReturnValue(
       createSupabaseMock({
         projects: () => ({ select })
-      }) as any
+      })
     )
 
     orchestratorStepMock.mockImplementation(() => Promise.resolve({ projectId: 'proj-30', status: 'executing' }))

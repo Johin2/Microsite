@@ -7,7 +7,7 @@ const Schema = z.object({
   metadata: z.record(z.unknown()).optional()
 })
 
-export async function POST(request: Request) {
+export async function POST(request) {
   const { taskId, metadata } = Schema.parse(await request.json())
   const run = await startRun({ taskId, metadata: metadata ?? {} })
   return NextResponse.json({ run })

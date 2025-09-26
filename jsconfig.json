@@ -8,6 +8,6 @@
       "@components/*": ["components/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.js", "**/*.jsx"],
+  "include": ["**/*.js", "**/*.jsx"],
   "exclude": ["node_modules"]
 }

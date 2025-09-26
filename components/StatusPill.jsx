@@ -1,19 +1,27 @@
 import clsx from 'clsx'
 
 const statusStyles = {
-  intake: 'bg-slate-700 text-slate-100',
-  planning: 'bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-500/40',
-  estimated: 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-500/40',
-  executing: 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/40',
-  review: 'bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-500/40',
-  done: 'bg-emerald-500 text-emerald-900',
-  blocked: 'bg-rose-500/20 text-rose-200 ring-1 ring-rose-500/40'
+  intake: 'bg-white/14 text-white/90',
+  planning: 'bg-white/12 text-white/90',
+  estimated: 'bg-white/10 text-white/90',
+  executing: 'bg-white/10 text-white/90',
+  review: 'bg-white/12 text-white/90',
+  done: 'bg-white text-[#111216]',
+  blocked: 'bg-[#2a1a1a] text-white/90',
+  pending: 'bg-white/10 text-white/90',
+  accepted: 'bg-white/12 text-white/90',
+  rejected: 'bg-[#2a1a1a] text-white/90'
 }
 
 export function StatusPill({ status }) {
-  const cls = statusStyles[status] ?? 'bg-slate-700 text-slate-100'
+  const cls = statusStyles[status] ?? 'bg-white/12 text-white/90'
   return (
-    <span className={clsx('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize', cls)}>
+    <span
+      className={clsx(
+        'inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ring-1 ring-white/10 backdrop-blur-sm transition',
+        cls
+      )}
+    >
       {status.replace('_', ' ')}
     </span>
   )

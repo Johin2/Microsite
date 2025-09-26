@@ -7,7 +7,7 @@ const UpdateSchema = z.object({
   status: z.enum(['backlog', 'in_progress', 'review', 'done', 'blocked'])
 })
 
-export async function GET(request: Request) {
+export async function GET(request) {
   const url = new URL(request.url)
   const projectId = url.searchParams.get('projectId')
   if (!projectId) {
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ board, tasks: tasks ?? [] })
 }
 
-export async function POST(request: Request) {
+export async function POST(request) {
   const body = UpdateSchema.parse(await request.json())
   const supabase = createServiceSupabaseClient()
 
@@ -46,17 +46,17 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true })
 }
 
-function groupByStatus(tasks: any[]) {
+function groupByStatus(tasks) {
   const columns = {
-    backlog: [] as any[],
-    in_progress: [] as any[],
-    review: [] as any[],
-    done: [] as any[],
-    blocked: [] as any[]
+    backlog: [],
+    in_progress: [],
+    review: [],
+    done: [],
+    blocked: []
   }
 
   for (const task of tasks) {
-    const status = (task.status ?? 'backlog') as keyof typeof columns
+    const status = task.status ?? 'backlog'
     if (!columns[status]) {
       columns.backlog.push(task)
     } else {

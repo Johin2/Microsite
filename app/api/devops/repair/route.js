@@ -2,45 +2,56 @@ import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceSupabaseClient } from '@lib/supabase'
+import { proposeRepair } from '@lib/agents'
 
 const Schema = z.object({
   runId: z.string().uuid(),
-  previewUrl: z.string().url(),
-  status: z.enum(['ready', 'building', 'error'])
+  triage: z.unknown()
 })
 
-export async function POST(request: Request) {
-  const payload = Schema.parse(await request.json())
+export async function POST(request) {
+  const { runId, triage } = Schema.parse(await request.json())
   const supabase = createServiceSupabaseClient()
 
   const { data: run, error: runError } = await supabase
     .from('runs')
     .select('id, task_id, tasks(project_id)')
-    .eq('id', payload.runId)
+    .eq('id', runId)
     .single()
 
   if (runError || !run) {
     return NextResponse.json({ error: runError?.message ?? 'run not found' }, { status: 404 })
   }
 
-  const tasksRelation = run.tasks as any
-  const projectId = Array.isArray(tasksRelation) ? tasksRelation[0]?.project_id ?? null : tasksRelation?.project_id ?? null
+  const tasksRelation = run.tasks
+  const projectId = Array.isArray(tasksRelation)
+    ? tasksRelation[0]?.project_id ?? null
+    : tasksRelation?.project_id ?? null
+
+  const proposal = await proposeRepair({
+    triage,
+    repoState: { taskId: run.task_id }
+  })
 
   await supabase
     .from('runs')
     .update({
-      preview_url: payload.previewUrl,
+      state: proposal.stop ? 'needs_review' : 'running',
+      result: {
+        triage,
+        proposal
+      },
       updated_at: new Date().toISOString()
     })
-    .eq('id', payload.runId)
+    .eq('id', runId)
 
   await supabase.from('events').insert({
     id: randomUUID(),
     project_id: projectId,
-    kind: 'run_update',
-    payload,
+    kind: 'repair',
+    payload: { runId, proposal },
     created_at: new Date().toISOString()
   })
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ proposal })
 }

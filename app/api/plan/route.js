@@ -6,7 +6,7 @@ const Schema = z.object({
   projectId: z.string().uuid()
 })
 
-export async function POST(request: Request) {
+export async function POST(request) {
   const { projectId } = Schema.parse(await request.json())
   const result = await orchestratorStep(projectId)
   return NextResponse.json(result)

@@ -21,7 +21,7 @@ const IntakeSchema = z.object({
     .optional()
 })
 
-export async function POST(request: Request) {
+export async function POST(request) {
   const body = IntakeSchema.parse(await request.json())
   const supabase = createServiceSupabaseClient()
 

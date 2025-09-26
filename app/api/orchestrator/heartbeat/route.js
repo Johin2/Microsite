@@ -22,7 +22,8 @@ export async function POST() {
       const result = await orchestratorStep(project.id)
       results.push(result)
     } catch (err) {
-      results.push({ projectId: project.id, status: project.status, error: (err as Error).message })
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      results.push({ projectId: project.id, status: project.status, error: message })
     }
   }
 
