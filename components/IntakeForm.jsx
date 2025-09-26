@@ -168,7 +168,7 @@ export function IntakeForm() {
       const payload = await response.json()
       setSubmission(payload.submission)
       setForm(defaultForm)
-      setStep(0)
+      setStep(sections.length - 1)
       setStepErrors({})
       setShowSuccess(true)
     } catch (err) {
