@@ -17,7 +17,7 @@ const AuthButtons = dynamic(() => import('../components/AuthButtons'), { ssr: fa
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${sans.variable} ${display.variable} relative min-h-screen overflow-x-hidden bg-slate-950 text-slate-100 antialiased`}>
+      <body className={`${sans.variable} ${display.variable} relative min-h-screen overflow-x-hidden bg-neutral-950 text-neutral-100 antialiased`}>
         <div className="pointer-events-none fixed inset-0 -z-10 bg-aurora opacity-80 blur-3xl" aria-hidden="true" />
         <div className="absolute right-6 top-6 z-20">
           <AuthButtons />

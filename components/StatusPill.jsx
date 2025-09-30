@@ -6,11 +6,11 @@ const statusStyles = {
   estimated: 'bg-white/10 text-white/90',
   executing: 'bg-white/10 text-white/90',
   review: 'bg-white/12 text-white/90',
-  done: 'bg-white text-[#111216]',
-  blocked: 'bg-[#2a1a1a] text-white/90',
+  done: 'bg-white text-neutral-900',
+  blocked: 'bg-neutral-900 text-neutral-200',
   pending: 'bg-white/10 text-white/90',
   accepted: 'bg-white/12 text-white/90',
-  rejected: 'bg-[#2a1a1a] text-white/90'
+  rejected: 'bg-neutral-900 text-neutral-200'
 }
 
 export function StatusPill({ status }) {

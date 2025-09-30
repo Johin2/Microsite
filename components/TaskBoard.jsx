@@ -35,22 +35,22 @@ export function TaskBoard({ tasks }) {
   return (
     <div className="grid gap-4 md:grid-cols-5">
       {columns.map((column) => (
-        <section key={column.status} className="flex min-h-[18rem] flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+        <section key={column.status} className="flex min-h-[18rem] flex-col gap-3 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4">
           <header className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-300">
               {column.title}
             </h3>
-            <span className="text-xs text-slate-500">{grouped[column.status]?.length ?? 0}</span>
+            <span className="text-xs text-neutral-500">{grouped[column.status]?.length ?? 0}</span>
           </header>
           <div className="flex-1 space-y-3">
             {(grouped[column.status] ?? []).map((task) => (
-              <article key={task.id} className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+              <article key={task.id} className="space-y-2 rounded-xl border border-neutral-800 bg-neutral-900/60 p-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-medium text-white">{task.title}</p>
                   <StatusPill status={task.status} />
                 </div>
                 {task.description ? (
-                  <p className="text-xs text-slate-400">{task.description}</p>
+                  <p className="text-xs text-neutral-400">{task.description}</p>
                 ) : null}
                 <StatusPicker
                   value={task.status}
@@ -69,12 +69,12 @@ export function TaskBoard({ tasks }) {
                   disabled={isPending}
                 />
                 {task.acceptance?.length ? (
-                  <ul className="space-y-1 text-xs text-slate-500">
+                  <ul className="space-y-1 text-xs text-neutral-500">
                     {task.acceptance.slice(0, 2).map((test) => (
                       <li key={test.id ?? test.description}>✓ {test.description}</li>
                     ))}
                     {task.acceptance.length > 2 ? (
-                      <li className="text-[10px] uppercase text-slate-600">
+                      <li className="text-[10px] uppercase text-neutral-600">
                         +{task.acceptance.length - 2} more tests
                       </li>
                     ) : null}
@@ -91,10 +91,10 @@ export function TaskBoard({ tasks }) {
 
 function StatusPicker({ value, onChange, disabled }) {
   return (
-    <label className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-500">
+    <label className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500">
       Status
       <select
-        className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-[11px] text-slate-200"
+        className="rounded-lg border border-neutral-800 bg-neutral-950 px-2 py-1 text-[11px] text-neutral-200"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}

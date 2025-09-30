@@ -463,12 +463,12 @@ export function IntakeForm() {
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-start gap-1 text-left">
               {authRequired ? (
-                <div className="text-xs text-amber-300">
-                  <p className="font-semibold text-amber-200">Sign in required</p>
+                <div className="text-xs text-neutral-300">
+                  <p className="font-semibold text-neutral-200">Sign in required</p>
                   <p>We saved your answers. Please sign in to submit your request.</p>
                 </div>
               ) : null}
-              {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+                {error ? <p className="text-sm text-neutral-300">{error}</p> : null}
             </div>
             <div className="flex items-center gap-2">
               {step > 0 ? (
@@ -505,14 +505,14 @@ export function IntakeForm() {
       </form>
 
       {authRequired ? (
-        <div className="rounded-[28px] border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100">
+        <div className="rounded-[28px] border border-neutral-500/30 bg-neutral-500/10 p-6 text-sm text-neutral-100">
           <p className="font-semibold">Almost there — sign in to continue.</p>
-          <p className="mt-2 text-amber-200/80">
+          <p className="mt-2 text-neutral-200/80">
             We&apos;ve preserved your responses. Sign in below to submit without re-entering any details.
           </p>
           <Link
             href={signInHref}
-            className="mt-4 inline-flex items-center justify-center rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-[#111216] hover:bg-amber-300"
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-neutral-200 px-5 py-2 text-sm font-semibold text-[#111216] hover:bg-neutral-300"
           >
             Sign in and finish submission
           </Link>
@@ -543,7 +543,7 @@ export function IntakeForm() {
             </div>
             <div className="space-y-2 text-xs text-white/60">
               <p className="font-semibold text-white">Campaign narrative</p>
-              <div className="max-h-48 overflow-auto rounded-2xl border border-white/8 bg-[#0b0c10] p-4 text-[11px] leading-relaxed">
+              <div className="max-h-48 overflow-auto rounded-2xl border border-white/8 bg-[#080808] p-4 text-[11px] leading-relaxed">
                 {submission.details}
               </div>
             </div>
@@ -573,7 +573,7 @@ export function IntakeForm() {
 
 function FormBlock({ title, description, children }) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/5 p-8 shadow-[0_28px_72px_rgba(9,10,14,0.5)] backdrop-blur-2xl">
+    <section className="rounded-[28px] border border-white/10 bg-white/5 p-8 shadow-[0_28px_72px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
       <header className="space-y-2">
         <h2 className="text-xl font-semibold text-white">{title}</h2>
         <p className="text-sm text-white/60">{description}</p>
@@ -589,7 +589,7 @@ function Field({ label, hint, children, required, error }) {
       ? cloneElement(children, {
           className: clsx(
             'w-full',
-            error ? 'border-rose-500/60 focus:border-rose-400/70 focus:ring-rose-400/30' : '',
+              error ? 'border-neutral-500/60 focus:border-neutral-400/70 focus:ring-neutral-400/30' : '',
             children.props.className
           )
         })
@@ -611,7 +611,7 @@ function Field({ label, hint, children, required, error }) {
         )}
       </div>
       {control}
-      {error ? <span className="text-xs text-rose-400">{error}</span> : null}
+        {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
     </label>
   )
 }
@@ -739,11 +739,11 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
             {value.map((file, index) => (
               <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3">
                 <span className="truncate">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="text-rose-300 hover:text-rose-200"
-                >
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="text-neutral-300 hover:text-neutral-200"
+                  >
                   Remove
                 </button>
               </li>
@@ -753,7 +753,7 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
           <p className="text-xs text-white/50">No files added yet.</p>
         )}
       </div>
-      {error ? <span className="text-xs text-rose-400">{error}</span> : null}
+        {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
     </div>
   )
 }
