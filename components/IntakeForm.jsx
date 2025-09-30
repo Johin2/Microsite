@@ -660,10 +660,10 @@ function CheckboxGrid({ options, value, onChange }) {
             key={option}
             onClick={() => onChange(toggleValue(value, option))}
             className={clsx(
-              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition focus-visible:!outline-none focus-visible:!ring-0 hover:!text-[#111216]',
+              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
               checked
-                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:!bg-white'
-                : 'border-white/10 !bg-transparent text-white/70 hover:border-white/40 hover:!bg-white'
+                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:bg-white/20'
+                : 'border-white/10 bg-transparent text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white'
             )}
           >
             {option}
@@ -685,10 +685,10 @@ function RadioGrid({ options, value, onChange }) {
             key={option}
             onClick={() => onChange(option)}
             className={clsx(
-              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition focus-visible:!outline-none focus-visible:!ring-0 hover:!text-[#111216]',
+              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
               checked
-                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:!bg-white'
-                : 'border-white/10 !bg-transparent text-white/70 hover:border-white/40 hover:!bg-white'
+                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:bg-white/20'
+                : 'border-white/10 bg-transparent text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white'
             )}
           >
             {option}
