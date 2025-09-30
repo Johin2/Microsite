@@ -261,9 +261,8 @@ export function IntakeForm() {
       if (form.brandTone.includes('Other') && !form.brandToneOther.trim()) {
         errors.brandToneOther = 'Describe the additional tone.'
       }
-      if (!form.mandatoryAssets.length) errors.mandatoryAssets = 'Upload mandatory elements.'
-      if (!form.brandGuidelines.length) errors.brandGuidelines = 'Upload brand guidelines.'
-      if (!form.packShots.length) errors.packShots = 'Upload pack shots or product imagery.'
+      // === FILE UPLOADS ARE OPTIONAL NOW ===
+      // No validation for mandatoryAssets, brandGuidelines, or packShots
       if (!form.budget.trim()) errors.budget = 'Share the investment range or estimate.'
       if (!form.goLiveDate.trim()) errors.goLiveDate = 'Provide a go-live date.'
       if (!form.successMetrics.length) errors.successMetrics = 'Select at least one success metric.'
@@ -573,10 +572,8 @@ function FormBlock({ title, description, children }) {
 }
 
 /**
- * IMPORTANT FIX:
- * - Replace the <label> wrapper with a neutral <div role="group"> wrapper.
- * - This prevents the first option/button inside from being implicitly associated with the label,
- *   which was causing the “top option highlights on hover” behavior.
+ * Field wrapper uses a neutral group container (not <label>) to avoid
+ * accidental association with the first control.
  */
 function Field({ label, hint, children, required, error }) {
   const control =
@@ -741,7 +738,7 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
           {label}
-          {required ? <span className="text-white/50"> *</span> : null}
+          {/* uploads are optional, so no star */}
         </span>
         {hint ? <span className="text-xs text-white/50">{hint}</span> : null}
       </div>
@@ -772,7 +769,7 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
           <p className="text-xs text-white/50">No files added yet.</p>
         )}
       </div>
-      {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
+      {/* no error shown for optional uploads */}
     </div>
   )
 }
@@ -935,7 +932,6 @@ function AudienceSection({ form, setForm, errors }) {
         value={form.personasFiles}
         onChange={(next) => setForm((prev) => ({ ...prev, personasFiles: next }))}
         multiple={false}
-        error={errors.personasFiles}
       />
       <Field
         label="What do you want the audience think/feel after interacting with this work?"
@@ -1022,31 +1018,27 @@ function DeliverablesSection({ form, setForm, errors }) {
       ) : null}
       <FileUploadField
         label="Do you have reference campaigns, brands, or moodboards we should take inspiration from?"
-        hint="Upload up to 5 files"
+        hint="Upload up to 5 files (optional)"
         value={form.referenceCampaigns}
         onChange={(next) => setForm((prev) => ({ ...prev, referenceCampaigns: next }))}
       />
       <FileUploadField
         label="Please upload any mandatory elements that must appear in this campaign"
-        hint="Upload logos, taglines, disclaimers, etc."
+        hint="Logos, taglines, disclaimers, etc. (optional)"
         value={form.mandatoryAssets}
         onChange={(next) => setForm((prev) => ({ ...prev, mandatoryAssets: next }))}
-        required
-        error={errors.mandatoryAssets}
       />
       <FileUploadField
         label="Please upload any brand guidelines (logos, fonts, colours, etc.) we should follow"
+        hint="Optional — attach if handy"
         value={form.brandGuidelines}
         onChange={(next) => setForm((prev) => ({ ...prev, brandGuidelines: next }))}
-        required
-        error={errors.brandGuidelines}
       />
       <FileUploadField
         label="Please upload any pack shots/product images we should use"
+        hint="Optional — attach if handy"
         value={form.packShots}
         onChange={(next) => setForm((prev) => ({ ...prev, packShots: next }))}
-        required
-        error={errors.packShots}
       />
       <Field label="What is the Budget?" required error={errors.budget}>
         <input
