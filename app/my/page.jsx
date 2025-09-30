@@ -11,7 +11,7 @@ export default async function MyProjectsPage() {
   const { data } = await supabase.auth.getUser()
   const user = data?.user ?? null
   if (!user?.email) {
-    redirect('/sign-in?next=/my')
+    redirect('/sign-in?audience=client&next=/my')
   }
 
   const submissions = await listSubmissionsByEmail(user.email)
