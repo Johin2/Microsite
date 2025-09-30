@@ -3,6 +3,7 @@
 import clsx from 'clsx'
 import Link from 'next/link'
 import { cloneElement, isValidElement, useEffect, useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const defaultForm = {
   objectives: [],
@@ -124,6 +125,50 @@ function readFiles(fileList) {
   )
 }
 
+// Smooth auto-advance helpers
+function focusFirstControl(el) {
+  if (!el) return
+  const target =
+    el.querySelector('input, textarea, select, button') ||
+    el
+  if (target) {
+    target.focus({ preventScroll: true })
+  }
+}
+
+function advanceFrom(fieldId, step, goToStep, sectionsLen) {
+  if (typeof window === 'undefined') return
+  const currentField = document.querySelector(`[data-field="${fieldId}"]`)
+  const sectionEl = currentField?.closest('[data-section]')
+  if (!sectionEl) return
+
+  const fields = Array.from(sectionEl.querySelectorAll('[data-field]'))
+  const idx = fields.findIndex((n) => n.getAttribute('data-field') === fieldId)
+
+  // try next field in the same section
+  const nextField = fields[idx + 1]
+  if (nextField) {
+    nextField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // allow the scroll animation to start, then focus
+    setTimeout(() => focusFirstControl(nextField), 180)
+    return
+  }
+
+  // otherwise move to next section
+  if (step < sectionsLen - 1) {
+    goToStep(step + 1)
+    // focus first field of next section after animates in
+    setTimeout(() => {
+      const nextSection = document.querySelector(`[data-section-index="${step + 1}"]`)
+      const firstField = nextSection?.querySelector('[data-field]')
+      if (firstField) {
+        firstField.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setTimeout(() => focusFirstControl(firstField), 180)
+      }
+    }, 220)
+  }
+}
+
 export function IntakeForm() {
   const [form, setForm] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
@@ -138,21 +183,9 @@ export function IntakeForm() {
 
   const sections = useMemo(
     () => [
-      {
-        key: 'objectives',
-        title: 'Campaign objectives',
-        description: 'Clarify the goal of this initiative so we align strategy and creative output.'
-      },
-      {
-        key: 'audience',
-        title: 'Audience & messaging',
-        description: 'Help us understand who we are speaking to and what they should take away.'
-      },
-      {
-        key: 'deliverables',
-        title: 'Deliverables & logistics',
-        description: 'Outline formats, guardrails, and launch timing so we can scope the work precisely.'
-      }
+      { key: 'objectives', title: 'Campaign objectives', description: 'Clarify the goal of this initiative so we align strategy and creative output.' },
+      { key: 'audience', title: 'Audience & messaging', description: 'Help us understand who we are speaking to and what they should take away.' },
+      { key: 'deliverables', title: 'Deliverables & logistics', description: 'Outline formats, guardrails, and launch timing so we can scope the work precisely.' }
     ],
     []
   )
@@ -222,64 +255,60 @@ export function IntakeForm() {
     })
   }
 
-  function validateStep(currentStep) {
-    const errors = {}
-
+  // --- validation (pure checker) ---
+  function getStepErrors(currentStep) {
+    const errs = {}
     if (currentStep === 0) {
-      if (!form.objectives.length) errors.objectives = 'Select at least one objective.'
-      if (form.objectives.includes('Other') && !form.objectiveOther.trim()) {
-        errors.objectiveOther = 'Describe the other objective.'
-      }
-      if (!form.campaignType.trim()) errors.campaignType = 'Select a campaign type.'
-      if (form.campaignType === 'Other' && !form.campaignTypeOther.trim()) {
-        errors.campaignTypeOther = 'Describe the campaign type.'
-      }
-      if (!form.ctaFocus.trim()) errors.ctaFocus = 'Select the CTA emphasis.'
-      if (form.ctaFocus === 'Other' && !form.ctaOther.trim()) {
-        errors.ctaOther = 'Describe the CTA focus.'
-      }
+      if (!form.objectives.length) errs.objectives = 'Select at least one objective.'
+      if (form.objectives.includes('Other') && !form.objectiveOther.trim()) errs.objectiveOther = 'Describe the other objective.'
+      if (!form.campaignType.trim()) errs.campaignType = 'Select a campaign type.'
+      if (form.campaignType === 'Other' && !form.campaignTypeOther.trim()) errs.campaignTypeOther = 'Describe the campaign type.'
+      if (!form.ctaFocus.trim()) errs.ctaFocus = 'Select the CTA emphasis.'
+      if (form.ctaFocus === 'Other' && !form.ctaOther.trim()) errs.ctaOther = 'Describe the CTA focus.'
     }
-
     if (currentStep === 1) {
-      if (!form.demographics.trim()) errors.demographics = 'Describe the demographics.'
-      if (!form.psychographics.trim()) errors.psychographics = 'Share the key psychographics.'
-      if (!form.problemsSolved.trim()) errors.problemsSolved = 'Explain the problems you solve.'
-      if (!form.painPoints.trim()) errors.painPoints = 'Detail the pain points to address.'
-      if (!form.audienceTarget.trim()) errors.audienceTarget = 'Select the primary audience.'
-      if (!form.audienceThinkFeel.trim()) errors.audienceThinkFeel = 'Share the desired takeaway.'
-      if (!form.audienceThinkFeelSecondary.trim()) {
-        errors.audienceThinkFeelSecondary = 'Share the follow-up takeaway.'
-      }
+      if (!form.demographics.trim()) errs.demographics = 'Describe the demographics.'
+      if (!form.psychographics.trim()) errs.psychographics = 'Share the key psychographics.'
+      if (!form.problemsSolved.trim()) errs.problemsSolved = 'Explain the problems you solve.'
+      if (!form.painPoints.trim()) errs.painPoints = 'Detail the pain points to address.'
+      if (!form.audienceTarget.trim()) errs.audienceTarget = 'Select the primary audience.'
+      if (!form.audienceThinkFeel.trim()) errs.audienceThinkFeel = 'Share the desired takeaway.'
+      if (!form.audienceThinkFeelSecondary.trim()) errs.audienceThinkFeelSecondary = 'Share the follow-up takeaway.'
     }
-
     if (currentStep === 2) {
-      if (!form.deliverables.length) errors.deliverables = 'Select at least one deliverable.'
-      if (form.deliverables.includes('Other') && !form.deliverablesOther.trim()) {
-        errors.deliverablesOther = 'Describe the other deliverables.'
-      }
-      if (!form.brandTone.length) errors.brandTone = 'Select the desired tone.'
-      if (form.brandTone.includes('Other') && !form.brandToneOther.trim()) {
-        errors.brandToneOther = 'Describe the additional tone.'
-      }
-      // === FILE UPLOADS ARE OPTIONAL NOW ===
-      // No validation for mandatoryAssets, brandGuidelines, or packShots
-      if (!form.budget.trim()) errors.budget = 'Share the investment range or estimate.'
-      if (!form.goLiveDate.trim()) errors.goLiveDate = 'Provide a go-live date.'
-      if (!form.successMetrics.length) errors.successMetrics = 'Select at least one success metric.'
-      if (form.successMetrics.includes('Other') && !form.successMetricsOther.trim()) {
-        errors.successMetricsOther = 'Describe the custom success metric.'
-      }
-      if (!form.generalNotes.trim()) errors.generalNotes = 'Add any additional context.'
+      if (!form.deliverables.length) errs.deliverables = 'Select at least one deliverable.'
+      if (form.deliverables.includes('Other') && !form.deliverablesOther.trim()) errs.deliverablesOther = 'Describe the other deliverables.'
+      if (!form.brandTone.length) errs.brandTone = 'Select the desired tone.'
+      if (form.brandTone.includes('Other') && !form.brandToneOther.trim()) errs.brandToneOther = 'Describe the additional tone.'
+      // uploads optional
+      if (!form.budget.trim()) errs.budget = 'Share the investment range or estimate.'
+      if (!form.goLiveDate.trim()) errs.goLiveDate = 'Provide a go-live date.'
+      if (!form.successMetrics.length) errs.successMetrics = 'Select at least one success metric.'
+      if (form.successMetrics.includes('Other') && !form.successMetricsOther.trim()) errs.successMetricsOther = 'Describe the custom success metric.'
+      if (!form.generalNotes.trim()) errs.generalNotes = 'Add any additional context.'
     }
+    return errs
+  }
 
+  function validateStep(currentStep) {
+    const errors = getStepErrors(currentStep)
     setStepErrors(errors)
     return Object.keys(errors).length === 0
   }
 
+  function isAllComplete() {
+    for (let i = 0; i < sections.length; i += 1) {
+      if (Object.keys(getStepErrors(i)).length) return false
+    }
+    return true
+  }
+
   function validateAll() {
     for (let i = 0; i < sections.length; i += 1) {
-      if (!validateStep(i)) {
+      const ok = Object.keys(getStepErrors(i)).length === 0
+      if (!ok) {
         setStep(i)
+        setStepErrors(getStepErrors(i))
         return false
       }
     }
@@ -289,30 +318,19 @@ export function IntakeForm() {
   function buildSummaryPayload() {
     const lines = [
       `Objectives: ${form.objectives.filter((item) => item !== 'Other').join(', ')}`,
-      form.objectives.includes('Other') && form.objectiveOther.trim()
-        ? `Objective (Other): ${form.objectiveOther.trim()}`
-        : null,
-      `Campaign type: ${
-        form.campaignType === 'Other' ? form.campaignTypeOther.trim() || 'Other' : form.campaignType
-      }`,
+      form.objectives.includes('Other') && form.objectiveOther.trim() ? `Objective (Other): ${form.objectiveOther.trim()}` : null,
+      `Campaign type: ${form.campaignType === 'Other' ? form.campaignTypeOther.trim() || 'Other' : form.campaignType}`,
       `CTA focus: ${form.ctaFocus === 'Other' ? form.ctaOther.trim() || 'Other' : form.ctaFocus}`,
       `Audience: ${form.audienceTarget}`,
       `Deliverables: ${form.deliverables.filter((item) => item !== 'Other').join(', ')}`,
-      form.deliverables.includes('Other') && form.deliverablesOther.trim()
-        ? `Deliverables (Other): ${form.deliverablesOther.trim()}`
-        : null,
+      form.deliverables.includes('Other') && form.deliverablesOther.trim() ? `Deliverables (Other): ${form.deliverablesOther.trim()}` : null,
       `Brand tone: ${form.brandTone.filter((item) => item !== 'Other').join(', ')}`,
-      form.brandTone.includes('Other') && form.brandToneOther.trim()
-        ? `Brand tone (Other): ${form.brandToneOther.trim()}`
-        : null,
+      form.brandTone.includes('Other') && form.brandToneOther.trim() ? `Brand tone (Other): ${form.brandToneOther.trim()}` : null,
       `Budget: ${form.budget}`,
       `Go-live date: ${form.goLiveDate}`,
       `Success metrics: ${form.successMetrics.filter((item) => item !== 'Other').join(', ')}`,
-      form.successMetrics.includes('Other') && form.successMetricsOther.trim()
-        ? `Success metrics (Other): ${form.successMetricsOther.trim()}`
-        : null
+      form.successMetrics.includes('Other') && form.successMetricsOther.trim() ? `Success metrics (Other): ${form.successMetricsOther.trim()}` : null
     ].filter(Boolean)
-
     return `${lines.join('\n')}`
   }
 
@@ -407,6 +425,9 @@ export function IntakeForm() {
     }
   }
 
+  // allow free navigation via step bar if all sections complete
+  const allComplete = isAllComplete()
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-16">
       <header className="space-y-4 text-center">
@@ -421,7 +442,18 @@ export function IntakeForm() {
         </p>
       </header>
 
-      <Progress steps={sections} current={step} onNavigate={(index) => (validateStep(step) && index <= step ? goToStep(index) : null)} />
+      <Progress
+        steps={sections}
+        current={step}
+        onNavigate={(index) => {
+          // if everything valid, you can jump anywhere; otherwise only backwards or current
+          if (allComplete || index <= step) {
+            goToStep(index)
+          } else if (validateStep(step) && index === step + 1) {
+            goToStep(index)
+          }
+        }}
+      />
 
       {showSuccess ? (
         <div className="rounded-[28px] border border-primary/20 bg-primary/10 p-8 text-center text-sm text-white/75">
@@ -433,27 +465,73 @@ export function IntakeForm() {
       ) : null}
 
       <form onSubmit={submit} className="space-y-10">
-        {step === 0 ? (
-          <ObjectivesSection
-            form={form}
-            setForm={setForm}
-            errors={stepErrors}
-          />
-        ) : null}
-        {step === 1 ? (
-          <AudienceSection
-            form={form}
-            setForm={setForm}
-            errors={stepErrors}
-          />
-        ) : null}
-        {step === 2 ? (
-          <DeliverablesSection
-            form={form}
-            setForm={setForm}
-            errors={stepErrors}
-          />
-        ) : null}
+        <AnimatePresence mode="wait">
+          {step === 0 ? (
+            <motion.div
+              key="step-0"
+              data-section
+              data-section-index="0"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <ObjectivesSection
+                form={form}
+                setForm={setForm}
+                errors={stepErrors}
+                step={step}
+                goToStep={goToStep}
+                onAdvance={advanceFrom}
+                sectionsLen={sections.length}
+              />
+            </motion.div>
+          ) : null}
+
+          {step === 1 ? (
+            <motion.div
+              key="step-1"
+              data-section
+              data-section-index="1"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <AudienceSection
+                form={form}
+                setForm={setForm}
+                errors={stepErrors}
+                step={step}
+                goToStep={goToStep}
+                onAdvance={advanceFrom}
+                sectionsLen={sections.length}
+              />
+            </motion.div>
+          ) : null}
+
+          {step === 2 ? (
+            <motion.div
+              key="step-2"
+              data-section
+              data-section-index="2"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <DeliverablesSection
+                form={form}
+                setForm={setForm}
+                errors={stepErrors}
+                step={step}
+                goToStep={goToStep}
+                onAdvance={advanceFrom}
+                sectionsLen={sections.length}
+              />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-white/5 px-6 py-5 backdrop-blur-xl">
           <p className="text-xs text-white/60">
@@ -486,9 +564,7 @@ export function IntakeForm() {
                   disabled={loading}
                   className="min-w-[160px] justify-center"
                   onClick={() => {
-                    if (validateStep(step)) {
-                      goToStep(step + 1)
-                    }
+                    if (validateStep(step)) goToStep(step + 1)
                   }}
                 >
                   Continue
@@ -571,11 +647,8 @@ function FormBlock({ title, description, children }) {
   )
 }
 
-/**
- * Field wrapper uses a neutral group container (not <label>) to avoid
- * accidental association with the first control.
- */
-function Field({ label, hint, children, required, error }) {
+// Neutral group wrapper (prevents hover bug)
+function Field({ id, label, hint, children, required, error }) {
   const control =
     isValidElement(children)
       ? cloneElement(children, {
@@ -587,13 +660,10 @@ function Field({ label, hint, children, required, error }) {
         })
       : children
 
-  const headingId = useMemo(
-    () => `field-${Math.random().toString(36).slice(2, 9)}`,
-    []
-  )
+  const headingId = useMemo(() => `field-${Math.random().toString(36).slice(2, 9)}`, [])
 
   return (
-    <div role="group" aria-labelledby={headingId} className="flex flex-col gap-3">
+    <div role="group" aria-labelledby={headingId} className="flex flex-col gap-3" data-field={id}>
       <div className="flex items-baseline justify-between gap-4">
         <span id={headingId} className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
           {label}
@@ -602,9 +672,7 @@ function Field({ label, hint, children, required, error }) {
         {hint ? (
           <span className="text-xs text-white/50">{hint}</span>
         ) : (
-          <span aria-hidden="true" className="select-none text-xs text-transparent">
-            placeholder
-          </span>
+          <span aria-hidden="true" className="select-none text-xs text-transparent">placeholder</span>
         )}
       </div>
       {control}
@@ -640,20 +708,10 @@ function Progress({ steps, current, onNavigate }) {
             )}
             aria-current={isActive ? 'step' : undefined}
           >
-            <span
-              className={clsx(
-                'font-semibold uppercase tracking-[0.26em] transition-colors',
-                isActive ? 'text-neutral-900' : 'text-white/70'
-              )}
-            >
+            <span className={clsx('font-semibold uppercase tracking-[0.26em] transition-colors', isActive ? 'text-neutral-900' : 'text-white/70')}>
               Step {index + 1}
             </span>
-            <span
-              className={clsx(
-                'mt-1 text-[11px] tracking-wide transition-colors',
-                isActive ? 'text-neutral-700' : 'text-white/50'
-              )}
-            >
+            <span className={clsx('mt-1 text-[11px] tracking-wide transition-colors', isActive ? 'text-neutral-700' : 'text-white/50')}>
               {step.title}
             </span>
           </button>
@@ -663,7 +721,7 @@ function Progress({ steps, current, onNavigate }) {
   )
 }
 
-function CheckboxGrid({ options, value, onChange }) {
+function CheckboxGrid({ options, value, onChange, onComplete }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {options.map((option) => {
@@ -672,12 +730,15 @@ function CheckboxGrid({ options, value, onChange }) {
           <button
             type="button"
             key={option}
-            onClick={() => onChange(toggleValue(value, option))}
+            onClick={() => {
+              const next = toggleValue(value, option)
+              onChange(next)
+              // auto-advance after picking at least one (and not choosing Other which may open a follow-up)
+              if (next.length && option !== 'Other' && onComplete) onComplete()
+            }}
             className={clsx(
               'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
-              checked
-                ? 'border-white bg-white text-neutral-900'
-                : 'border-white/40 bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
+              checked ? 'border-white bg-white text-neutral-900' : 'border-white/40 bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
             )}
             aria-pressed={checked}
           >
@@ -689,7 +750,7 @@ function CheckboxGrid({ options, value, onChange }) {
   )
 }
 
-function RadioGrid({ options, value, onChange }) {
+function RadioGrid({ options, value, onChange, onComplete }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {options.map((option) => {
@@ -698,12 +759,13 @@ function RadioGrid({ options, value, onChange }) {
           <button
             type="button"
             key={option}
-            onClick={() => onChange(option)}
+            onClick={() => {
+              onChange(option)
+              if (option !== 'Other' && onComplete) onComplete()
+            }}
             className={clsx(
               'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
-              checked
-                ? 'border-white bg-white text-neutral-900'
-                : 'border-white/40 bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
+              checked ? 'border-white bg-white text-neutral-900' : 'border-white/40 bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
             )}
             aria-pressed={checked}
           >
@@ -715,7 +777,7 @@ function RadioGrid({ options, value, onChange }) {
   )
 }
 
-function FileUploadField({ label, hint, value, onChange, multiple = true, required, error, accept }) {
+function FileUploadField({ id, label, hint, value, onChange, multiple = true, accept }) {
   async function handleSelection(event) {
     const files = event.target.files
     if (!files || !files.length) return
@@ -734,12 +796,9 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
   }
 
   return (
-    <div className="flex flex-col gap-3" role="group" aria-label={label}>
+    <div className="flex flex-col gap-3" role="group" aria-label={label} data-field={id}>
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
-          {label}
-          {/* uploads are optional, so no star */}
-        </span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">{label}</span>
         {hint ? <span className="text-xs text-white/50">{hint}</span> : null}
       </div>
       <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-white/20 bg-white/5 p-5">
@@ -755,11 +814,7 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
             {value.map((file, index) => (
               <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3">
                 <span className="truncate">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="text-neutral-300 hover:text-neutral-200"
-                >
+                <button type="button" onClick={() => removeFile(index)} className="text-neutral-300 hover:text-neutral-200">
                   Remove
                 </button>
               </li>
@@ -769,88 +824,78 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
           <p className="text-xs text-white/50">No files added yet.</p>
         )}
       </div>
-      {/* no error shown for optional uploads */}
     </div>
   )
 }
 
-function ObjectivesSection({ form, setForm, errors }) {
+// --- Sections with auto-advance hooks ---
+function ObjectivesSection({ form, setForm, errors, step, goToStep, onAdvance, sectionsLen }) {
+  const adv = (fieldId) => onAdvance(fieldId, step, goToStep, sectionsLen)
+
   return (
     <FormBlock
       title="Campaign objectives"
       description="Clarify what success looks like so the strategy team can respond with precision."
     >
-      <Field label="What is the objective of this campaign?" required error={errors.objectives}>
+      <Field id="objectives" label="What is the objective of this campaign?" required error={errors.objectives}>
         <CheckboxGrid
           options={objectiveOptions}
           value={form.objectives}
           onChange={(next) => setForm((prev) => ({ ...prev, objectives: next }))}
+          onComplete={() => adv('objectives')}
         />
       </Field>
+
       {form.objectives.includes('Other') ? (
-        <Field
-          label="Objective — Other"
-          hint="Describe the additional outcome we should prioritize"
-          required
-          error={errors.objectiveOther}
-        >
+        <Field id="objectiveOther" label="Objective — Other" hint="Describe the additional outcome we should prioritize" required error={errors.objectiveOther}>
           <textarea
             rows={3}
             value={form.objectiveOther}
-            onChange={(event) => setForm((prev) => ({ ...prev, objectiveOther: event.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, objectiveOther: e.target.value }))}
+            onBlur={() => form.objectiveOther.trim() && adv('objectiveOther')}
             placeholder="Expand on the unique objective driving this campaign."
             className="min-h-[120px]"
           />
         </Field>
       ) : null}
-      <Field label="What type of campaign is this?" required error={errors.campaignType}>
+
+      <Field id="campaignType" label="What type of campaign is this?" required error={errors.campaignType}>
         <RadioGrid
           options={campaignTypeOptions}
           value={form.campaignType}
-          onChange={(next) =>
-            setForm((prev) => ({
-              ...prev,
-              campaignType: next,
-              campaignTypeOther: next === 'Other' ? prev.campaignTypeOther : ''
-            }))
-          }
+          onChange={(next) => setForm((prev) => ({ ...prev, campaignType: next, campaignTypeOther: next === 'Other' ? prev.campaignTypeOther : '' }))}
+          onComplete={() => adv('campaignType')}
         />
       </Field>
+
       {form.campaignType === 'Other' ? (
-        <Field
-          label="Campaign type — Other"
-          required
-          error={errors.campaignTypeOther}
-        >
+        <Field id="campaignTypeOther" label="Campaign type — Other" required error={errors.campaignTypeOther}>
           <input
             value={form.campaignTypeOther}
-            onChange={(event) => setForm((prev) => ({ ...prev, campaignTypeOther: event.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, campaignTypeOther: e.target.value }))}
+            onKeyDown={(e) => e.key === 'Enter' && form.campaignTypeOther.trim() && adv('campaignTypeOther')}
+            onBlur={() => form.campaignTypeOther.trim() && adv('campaignTypeOther')}
             placeholder="Describe the campaign format."
           />
         </Field>
       ) : null}
-      <Field label="What should the CTA lean more towards?" required error={errors.ctaFocus}>
+
+      <Field id="ctaFocus" label="What should the CTA lean more towards?" required error={errors.ctaFocus}>
         <RadioGrid
           options={ctaOptions}
           value={form.ctaFocus}
-          onChange={(next) =>
-            setForm((prev) => ({
-              ...prev,
-              ctaFocus: next,
-              ctaOther: next === 'Other' ? prev.ctaOther : ''
-            }))
-          }
+          onChange={(next) => setForm((prev) => ({ ...prev, ctaFocus: next, ctaOther: next === 'Other' ? prev.ctaOther : '' }))}
+          onComplete={() => adv('ctaFocus')}
         />
       </Field>
+
       {form.ctaFocus === 'Other' ? (
-        <Field
-          label="CTA focus — Other"
-          required
-          error={errors.ctaOther}
-        >
+        <Field id="ctaOther" label="CTA focus — Other" required error={errors.ctaOther}>
           <input
             value={form.ctaOther}
-            onChange={(event) => setForm((prev) => ({ ...prev, ctaOther: event.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, ctaOther: e.target.value }))}
+            onKeyDown={(e) => e.key === 'Enter' && form.ctaOther.trim() && adv('ctaOther')}
+            onBlur={() => form.ctaOther.trim() && adv('ctaOther')}
             placeholder="Describe the CTA focus in your words."
           />
         </Field>
@@ -859,94 +904,89 @@ function ObjectivesSection({ form, setForm, errors }) {
   )
 }
 
-function AudienceSection({ form, setForm, errors }) {
+function AudienceSection({ form, setForm, errors, step, goToStep, onAdvance, sectionsLen }) {
+  const adv = (fieldId) => onAdvance(fieldId, step, goToStep, sectionsLen)
+
   return (
     <FormBlock
       title="Audience & messaging"
       description="Explain who we are speaking to and what transformation they should experience."
     >
-      <Field
-        label="Who are we targeting? (demographics)"
-        required
-        error={errors.demographics}
-        hint="Age, location, role, income band, etc."
-      >
+      <Field id="demographics" label="Who are we targeting? (demographics)" required error={errors.demographics} hint="Age, location, role, income band, etc.">
         <textarea
           rows={4}
           value={form.demographics}
-          onChange={(event) => setForm((prev) => ({ ...prev, demographics: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, demographics: e.target.value }))}
+          onBlur={() => form.demographics.trim() && adv('demographics')}
           placeholder="Outline the primary demographic profile in as much detail as possible."
           className="min-h-[140px]"
         />
       </Field>
-      <Field
-        label="What psychographics matter most?"
-        required
-        error={errors.psychographics}
-        hint="Values, behaviours, affinities, and motivations"
-      >
+
+      <Field id="psychographics" label="What psychographics matter most?" required error={errors.psychographics} hint="Values, behaviours, affinities, and motivations">
         <textarea
           rows={4}
           value={form.psychographics}
-          onChange={(event) => setForm((prev) => ({ ...prev, psychographics: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, psychographics: e.target.value }))}
+          onBlur={() => form.psychographics.trim() && adv('psychographics')}
           placeholder="Describe beliefs, interests, and lifestyle cues that define this audience."
           className="min-h-[140px]"
         />
       </Field>
-      <Field
-        label="What problems or needs does your product/service solve for them?"
-        required
-        error={errors.problemsSolved}
-      >
+
+      <Field id="problemsSolved" label="What problems or needs does your product/service solve for them?" required error={errors.problemsSolved}>
         <textarea
           rows={4}
           value={form.problemsSolved}
-          onChange={(event) => setForm((prev) => ({ ...prev, problemsSolved: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, problemsSolved: e.target.value }))}
+          onBlur={() => form.problemsSolved.trim() && adv('problemsSolved')}
           placeholder="Explain the core jobs-to-be-done and outcomes your offer delivers."
           className="min-h-[140px]"
         />
       </Field>
-      <Field
-        label="What pain points, desires, or motivations should we address?"
-        required
-        error={errors.painPoints}
-      >
+
+      <Field id="painPoints" label="What pain points, desires, or motivations should we address?" required error={errors.painPoints}>
         <textarea
           rows={4}
           value={form.painPoints}
-          onChange={(event) => setForm((prev) => ({ ...prev, painPoints: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, painPoints: e.target.value }))}
+          onBlur={() => form.painPoints.trim() && adv('painPoints')}
           placeholder="List the barriers, objections, and sparks we should lean into."
           className="min-h-[140px]"
         />
       </Field>
-      <Field label="Are we targeting existing customers, new prospects, or both?" required error={errors.audienceTarget}>
+
+      <Field id="audienceTarget" label="Are we targeting existing customers, new prospects, or both?" required error={errors.audienceTarget}>
         <RadioGrid
           options={audienceOptions}
           value={form.audienceTarget}
           onChange={(next) => setForm((prev) => ({ ...prev, audienceTarget: next }))}
+          onComplete={() => adv('audienceTarget')}
         />
       </Field>
+
       <FileUploadField
+        id="personasFiles"
         label="Do you have buyer personas, audience segments, or market research we should reference?"
         hint="Upload PDFs, decks, or docs (optional)"
         value={form.personasFiles}
         onChange={(next) => setForm((prev) => ({ ...prev, personasFiles: next }))}
         multiple={false}
       />
-      <Field
-        label="What do you want the audience think/feel after interacting with this work?"
-        required
-        error={errors.audienceThinkFeel}
-      >
+
+      <Field id="audienceThinkFeel" label="What do you want the audience think/feel after interacting with this work?" required error={errors.audienceThinkFeel}>
         <textarea
           rows={4}
           value={form.audienceThinkFeel}
-          onChange={(event) => setForm((prev) => ({ ...prev, audienceThinkFeel: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, audienceThinkFeel: e.target.value }))}
+          onBlur={() => form.audienceThinkFeel.trim() && adv('audienceThinkFeel')}
           placeholder="Describe the primary emotional or cognitive shift you expect."
           className="min-h-[140px]"
         />
       </Field>
+
       <Field
+        id="audienceThinkFeelSecondary"
         label="What do you want the audience think/feel after interacting with this work? (Part 2)"
         required
         error={errors.audienceThinkFeelSecondary}
@@ -955,9 +995,8 @@ function AudienceSection({ form, setForm, errors }) {
         <textarea
           rows={4}
           value={form.audienceThinkFeelSecondary}
-          onChange={(event) =>
-            setForm((prev) => ({ ...prev, audienceThinkFeelSecondary: event.target.value }))
-          }
+          onChange={(e) => setForm((p) => ({ ...p, audienceThinkFeelSecondary: e.target.value }))}
+          onBlur={() => form.audienceThinkFeelSecondary.trim() && adv('audienceThinkFeelSecondary')}
           placeholder="Add nuance or secondary reactions you want to guarantee."
           className="min-h-[140px]"
         />
@@ -966,125 +1005,137 @@ function AudienceSection({ form, setForm, errors }) {
   )
 }
 
-function DeliverablesSection({ form, setForm, errors }) {
+function DeliverablesSection({ form, setForm, errors, step, goToStep, onAdvance, sectionsLen }) {
+  const adv = (fieldId) => onAdvance(fieldId, step, goToStep, sectionsLen)
+
   return (
     <FormBlock
       title="Deliverables & logistics"
       description="Capture the production scope, mandatory elements, and success metrics."
     >
-      <Field label="What formats/deliverables do you need?" required error={errors.deliverables}>
+      <Field id="deliverables" label="What formats/deliverables do you need?" required error={errors.deliverables}>
         <CheckboxGrid
           options={deliverableOptions}
           value={form.deliverables}
           onChange={(next) => setForm((prev) => ({ ...prev, deliverables: next }))}
+          onComplete={() => adv('deliverables')}
         />
       </Field>
+
       {form.deliverables.includes('Other') ? (
-        <Field
-          label="Deliverables — Other"
-          required
-          error={errors.deliverablesOther}
-        >
+        <Field id="deliverablesOther" label="Deliverables — Other" required error={errors.deliverablesOther}>
           <textarea
             rows={3}
             value={form.deliverablesOther}
-            onChange={(event) => setForm((prev) => ({ ...prev, deliverablesOther: event.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, deliverablesOther: e.target.value }))}
+            onBlur={() => form.deliverablesOther.trim() && adv('deliverablesOther')}
             placeholder="Outline additional deliverables, specs, or formats."
             className="min-h-[120px]"
           />
         </Field>
       ) : null}
-      <Field label="How would you like your brand to come across in this campaign?" required error={errors.brandTone}>
+
+      <Field id="brandTone" label="How would you like your brand to come across in this campaign?" required error={errors.brandTone}>
         <CheckboxGrid
           options={brandToneOptions}
           value={form.brandTone}
           onChange={(next) => setForm((prev) => ({ ...prev, brandTone: next }))}
+          onComplete={() => adv('brandTone')}
         />
       </Field>
+
       {form.brandTone.includes('Other') ? (
-        <Field
-          label="Brand tone — Other"
-          required
-          error={errors.brandToneOther}
-        >
+        <Field id="brandToneOther" label="Brand tone — Other" required error={errors.brandToneOther}>
           <textarea
             rows={3}
             value={form.brandToneOther}
-            onChange={(event) => setForm((prev) => ({ ...prev, brandToneOther: event.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, brandToneOther: e.target.value }))}
+            onBlur={() => form.brandToneOther.trim() && adv('brandToneOther')}
             placeholder="Describe the unique tone or mood we should convey."
             className="min-h-[120px]"
           />
         </Field>
       ) : null}
+
       <FileUploadField
+        id="referenceCampaigns"
         label="Do you have reference campaigns, brands, or moodboards we should take inspiration from?"
         hint="Upload up to 5 files (optional)"
         value={form.referenceCampaigns}
         onChange={(next) => setForm((prev) => ({ ...prev, referenceCampaigns: next }))}
       />
+
       <FileUploadField
+        id="mandatoryAssets"
         label="Please upload any mandatory elements that must appear in this campaign"
         hint="Logos, taglines, disclaimers, etc. (optional)"
         value={form.mandatoryAssets}
         onChange={(next) => setForm((prev) => ({ ...prev, mandatoryAssets: next }))}
       />
+
       <FileUploadField
+        id="brandGuidelines"
         label="Please upload any brand guidelines (logos, fonts, colours, etc.) we should follow"
         hint="Optional — attach if handy"
         value={form.brandGuidelines}
         onChange={(next) => setForm((prev) => ({ ...prev, brandGuidelines: next }))}
       />
+
       <FileUploadField
+        id="packShots"
         label="Please upload any pack shots/product images we should use"
         hint="Optional — attach if handy"
         value={form.packShots}
         onChange={(next) => setForm((prev) => ({ ...prev, packShots: next }))}
       />
-      <Field label="What is the Budget?" required error={errors.budget}>
+
+      <Field id="budget" label="What is the Budget?" required error={errors.budget}>
         <input
           value={form.budget}
-          onChange={(event) => setForm((prev) => ({ ...prev, budget: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, budget: e.target.value }))}
+          onKeyDown={(e) => e.key === 'Enter' && form.budget.trim() && adv('budget')}
+          onBlur={() => form.budget.trim() && adv('budget')}
           placeholder="Share the working budget or range."
         />
       </Field>
-      <Field label="What is the Go-live date?" required error={errors.goLiveDate}>
+
+      <Field id="goLiveDate" label="What is the Go-live date?" required error={errors.goLiveDate}>
         <input
           type="date"
           value={form.goLiveDate}
-          onChange={(event) => setForm((prev) => ({ ...prev, goLiveDate: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, goLiveDate: e.target.value }))}
+          onBlur={() => form.goLiveDate && adv('goLiveDate')}
         />
       </Field>
-      <Field label="How would you measure the success of this campaign" required error={errors.successMetrics}>
+
+      <Field id="successMetrics" label="How would you measure the success of this campaign" required error={errors.successMetrics}>
         <CheckboxGrid
           options={successMetricOptions}
           value={form.successMetrics}
           onChange={(next) => setForm((prev) => ({ ...prev, successMetrics: next }))}
+          onComplete={() => adv('successMetrics')}
         />
       </Field>
+
       {form.successMetrics.includes('Other') ? (
-        <Field
-          label="Success metrics — Other"
-          required
-          error={errors.successMetricsOther}
-        >
+        <Field id="successMetricsOther" label="Success metrics — Other" required error={errors.successMetricsOther}>
           <textarea
             rows={3}
             value={form.successMetricsOther}
-            onChange={(event) => setForm((prev) => ({ ...prev, successMetricsOther: event.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, successMetricsOther: e.target.value }))}
+            onBlur={() => form.successMetricsOther.trim() && adv('successMetricsOther')}
             placeholder="Specify the metric or measurement framework."
             className="min-h-[120px]"
           />
         </Field>
       ) : null}
-      <Field
-        label="General Notes (anything else we should know)"
-        required
-        error={errors.generalNotes}
-      >
+
+      <Field id="generalNotes" label="General Notes (anything else we should know)" required error={errors.generalNotes}>
         <textarea
           rows={4}
           value={form.generalNotes}
-          onChange={(event) => setForm((prev) => ({ ...prev, generalNotes: event.target.value }))}
+          onChange={(e) => setForm((p) => ({ ...p, generalNotes: e.target.value }))}
+          onBlur={() => form.generalNotes.trim() && adv('generalNotes')}
           placeholder="Flag approvals, redlines, timelines, or additional context your team wants us to note."
           className="min-h-[140px]"
         />
