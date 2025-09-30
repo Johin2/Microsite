@@ -636,12 +636,29 @@ function Progress({ steps, current, onNavigate }) {
             type="button"
             onClick={() => onNavigate(index)}
             className={clsx(
-              'flex min-w-[140px] flex-col items-center rounded-2xl border px-4 py-2 transition',
-              isActive ? 'border-white/30 bg-white/10 text-white' : 'border-white/10 bg-transparent hover:border-white/20'
+              'flex min-w-[140px] flex-col items-center rounded-2xl border px-4 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
+              isActive
+                ? 'border-white bg-white text-neutral-900'
+                : 'border-white/40 bg-transparent text-white/70 hover:bg-white/10 hover:text-white'
             )}
+            aria-current={isActive ? 'step' : undefined}
           >
-            <span className="font-semibold uppercase tracking-[0.26em]">Step {index + 1}</span>
-            <span className="mt-1 text-[11px] tracking-wide text-white/60">{step.title}</span>
+            <span
+              className={clsx(
+                'font-semibold uppercase tracking-[0.26em] transition-colors',
+                isActive ? 'text-neutral-900' : 'text-white/70'
+              )}
+            >
+              Step {index + 1}
+            </span>
+            <span
+              className={clsx(
+                'mt-1 text-[11px] tracking-wide transition-colors',
+                isActive ? 'text-neutral-700' : 'text-white/50'
+              )}
+            >
+              {step.title}
+            </span>
           </button>
         )
       })}
@@ -660,11 +677,12 @@ function CheckboxGrid({ options, value, onChange }) {
             key={option}
             onClick={() => onChange(toggleValue(value, option))}
             className={clsx(
-              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
+              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
               checked
-                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:bg-white/20'
-                : 'border-white/10 bg-transparent text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white'
+                ? 'border-white bg-white text-neutral-900'
+                : 'border-white/40 bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
             )}
+            aria-pressed={checked}
           >
             {option}
           </button>
@@ -685,11 +703,12 @@ function RadioGrid({ options, value, onChange }) {
             key={option}
             onClick={() => onChange(option)}
             className={clsx(
-              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
+              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
               checked
-                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:bg-white/20'
-                : 'border-white/10 bg-transparent text-white/70 hover:border-white/30 hover:bg-white/10 hover:text-white'
+                ? 'border-white bg-white text-neutral-900'
+                : 'border-white/40 bg-transparent text-white/80 hover:bg-white/10 hover:text-white'
             )}
+            aria-pressed={checked}
           >
             {option}
           </button>

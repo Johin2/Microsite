@@ -27,9 +27,8 @@ export default async function MyProjectDetailsPage({ params }) {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-        <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,_rgba(245,245,245,0.14),_transparent_70%)]" aria-hidden="true" />
-        <div className="relative flex flex-wrap items-start justify-between gap-6">
+      <header className="rounded-[32px] border border-white/10 bg-neutral-900 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)]">
+        <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Your project</p>
             <h1 className="text-3xl font-semibold text-white">{submission.metadata?.projectTitle ?? submission.name}</h1>
@@ -45,11 +44,11 @@ export default async function MyProjectDetailsPage({ params }) {
       </header>
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h2 className="text-lg font-semibold text-white">Submission details</h2>
           <p className="mt-4 whitespace-pre-line leading-relaxed text-neutral-300/90">{submission.details}</p>
         </article>
-        <article className="space-y-4 rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="space-y-4 rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Project metadata</h3>
           <Meta label="Email" value={submission.email} />
           <Meta label="Timeline" value={submission.metadata?.timeline ?? '—'} />
@@ -60,7 +59,7 @@ export default async function MyProjectDetailsPage({ params }) {
         </article>
       </section>
 
-      <section className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+      <section className="rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
         <h2 className="text-lg font-semibold text-white">Reference links</h2>
         {Array.isArray(submission.metadata?.references) && submission.metadata.references.length ? (
           <ul className="mt-4 space-y-2">
