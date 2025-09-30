@@ -415,7 +415,7 @@ export function IntakeForm() {
           Campaign intake
         </span>
         <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
-          Brief us on GB x Komerz: Streamlining our Workflow
+          Brief us on Streamlining Your Workflow
         </h1>
         <p className="mx-auto max-w-2xl text-sm text-white/70">
           Share campaign objectives, audience insights, and required assets so we can orchestrate a focused launch plan within one business day.
