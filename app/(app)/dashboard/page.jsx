@@ -42,11 +42,11 @@ export default async function DashboardPage({ searchParams }) {
         />
       </section>
 
-      <section className="overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_34px_82px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
+      <section className="overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-8 py-6">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold text-white">Submission portfolio</h2>
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Filter and triage current engagements</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-neutral-400">Filter and triage current engagements</p>
             <Filters filters={filters} />
           </div>
           <Link
@@ -68,14 +68,14 @@ export default async function DashboardPage({ searchParams }) {
                 <th className="px-8 py-4 text-left">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/8 text-sm text-slate-200/85">
+            <tbody className="divide-y divide-white/8 text-sm text-neutral-200/85">
               {filtered.map((submission) => (
                 <tr key={submission.id} className="transition duration-200 hover:bg-white/[0.06]">
                   <td className="px-8 py-5">
                     <Link className="font-semibold text-white hover:text-primary" href={`/projects/${submission.id}`}>
                       {submission.metadata?.projectTitle ?? submission.name}
                     </Link>
-                    <p className="mt-1 text-xs text-slate-400 line-clamp-1">{submission.details}</p>
+                    <p className="mt-1 text-xs text-neutral-400 line-clamp-1">{submission.details}</p>
                   </td>
                   <td className="px-8 py-5">
                     <ProjectTypeBadge type={submission.metadata?.projectType ?? 'other'} />
@@ -83,14 +83,14 @@ export default async function DashboardPage({ searchParams }) {
                   <td className="px-8 py-5">
                     <StatusPill status={submission.status} />
                   </td>
-                  <td className="px-8 py-5 text-slate-400">
+                  <td className="px-8 py-5 text-neutral-400">
                     <span className="block text-white/80">{submission.metadata?.clientName ?? '—'}</span>
                     <span className="text-xs text-white/50">{submission.email}</span>
                   </td>
-                  <td className="px-8 py-5 text-slate-400">
+                  <td className="px-8 py-5 text-neutral-400">
                     <div className="flex flex-col">
                       <span>{formatSubmittedDate(submission.createdAt)}</span>
-                      <span className="text-xs text-slate-500">{formatSubmittedRelative(submission.createdAt)}</span>
+                      <span className="text-xs text-neutral-500">{formatSubmittedRelative(submission.createdAt)}</span>
                     </div>
                   </td>
                   <td className="px-8 py-5">
@@ -113,7 +113,7 @@ export default async function DashboardPage({ searchParams }) {
               ))}
               {filtered.length === 0 ? (
                 <tr>
-                  <td className="px-8 py-6 text-center text-sm text-slate-400" colSpan={6}>
+                  <td className="px-8 py-6 text-center text-sm text-neutral-400" colSpan={6}>
                     No submissions match the current filters.
                   </td>
                 </tr>
@@ -122,7 +122,7 @@ export default async function DashboardPage({ searchParams }) {
           </table>
         </div>
         {rejected.length ? (
-          <footer className="border-t border-white/10 bg-white/5 px-8 py-5 text-xs text-slate-400">
+          <footer className="border-t border-white/10 bg-white/5 px-8 py-5 text-xs text-neutral-400">
             {rejected.length} request{rejected.length === 1 ? '' : 's'} marked as rejected remain hidden from the projects gallery.
           </footer>
         ) : null}
@@ -133,7 +133,7 @@ export default async function DashboardPage({ searchParams }) {
 
 function MetricCard({ title, value, description, accent }) {
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/10 p-6 shadow-[0_28px_70px_rgba(9,10,14,0.5)] backdrop-blur-2xl transition duration-300 hover:border-white/20 hover:shadow-[0_34px_88px_rgba(9,10,14,0.58)]">
+    <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/10 p-6 shadow-[0_28px_70px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition duration-300 hover:border-white/20 hover:shadow-[0_34px_88px_rgba(0,0,0,0.58)]">
       <div className={`absolute inset-0 bg-gradient-to-br ${accent}`} aria-hidden="true" />
       <div className="relative space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">{title}</p>

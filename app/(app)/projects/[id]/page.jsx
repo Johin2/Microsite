@@ -20,7 +20,7 @@ export default async function ProjectPage({ params }) {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
+      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
         <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,_rgba(245,245,245,0.14),_transparent_70%)]" aria-hidden="true" />
         <div className="relative flex flex-wrap items-start justify-between gap-8">
           <div className="space-y-4">
@@ -30,7 +30,7 @@ export default async function ProjectPage({ params }) {
               </h1>
               <ProjectTypeBadge type={submission.metadata?.projectType ?? 'other'} />
             </div>
-            <div className="grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+            <div className="grid gap-2 text-xs text-neutral-400 sm:grid-cols-2">
               <Metadata label="Status" value={<StatusPill status={submission.status} />} asRow={false} />
               <Metadata label="Client" value={submission.metadata?.clientName ?? submission.email} />
               <Metadata label="Investment" value={submission.metadata?.budget ?? '—'} />
@@ -40,7 +40,7 @@ export default async function ProjectPage({ params }) {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/review"
-              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:text-white"
+              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-neutral-200 transition hover:border-white/30 hover:text-white"
             >
               Open Review Console
             </Link>
@@ -52,12 +52,12 @@ export default async function ProjectPage({ params }) {
       </header>
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
+        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
           <h2 className="text-lg font-semibold text-white">Request details</h2>
-          <p className="mt-4 whitespace-pre-line leading-relaxed text-slate-300/90">{submission.details}</p>
+          <p className="mt-4 whitespace-pre-line leading-relaxed text-neutral-300/90">{submission.details}</p>
         </article>
-        <article className="space-y-4 rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Project metadata</h3>
+        <article className="space-y-4 rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Project metadata</h3>
           <Metadata label="Company" value={submission.metadata?.company ?? '—'} />
           <Metadata label="Contact" value={submission.email} />
           <Metadata label="Timeline" value={submission.metadata?.timeline ?? '—'} />
@@ -68,8 +68,8 @@ export default async function ProjectPage({ params }) {
       </section>
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-slate-200/90 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Reference links</h3>
+        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Reference links</h3>
           {Array.isArray(submission.metadata?.references) && submission.metadata.references.length ? (
             <ul className="mt-4 space-y-2">
               {submission.metadata.references.map((file, index) => (
@@ -81,12 +81,12 @@ export default async function ProjectPage({ params }) {
               ))}
             </ul>
           ) : (
-            <p className="mt-4 text-xs text-slate-500">No attachments provided.</p>
+            <p className="mt-4 text-xs text-neutral-500">No attachments provided.</p>
           )}
         </article>
-        <article className="space-y-4 rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f1014]/95 via-[#121317]/90 to-[#15161b]/95 p-6 text-sm text-slate-200/85 shadow-[0_28px_72px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Next steps</h3>
-          <ul className="space-y-3 text-sm text-slate-300/90">
+        <article className="space-y-4 rounded-[28px] border border-white/10 bg-gradient-to-br from-black/95 via-neutral-950/90 to-neutral-900/95 p-6 text-sm text-neutral-200/85 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Next steps</h3>
+          <ul className="space-y-3 text-sm text-neutral-300/90">
             <li className="flex items-start gap-3">
               <CheckCircle className="mt-1 h-4 w-4 text-white/60" />
               <span>Schedule discovery call with {submission.metadata?.clientName ?? 'client'}.</span>
@@ -110,12 +110,12 @@ function Metadata({ label, value, asRow = true }) {
   return (
     <div
       className={clsx(
-        'flex gap-4 text-slate-300/90',
+        'flex gap-4 text-neutral-300/90',
         asRow ? 'items-center justify-between' : 'flex-col items-start'
       )}
     >
-      <span className="text-[11px] uppercase tracking-[0.28em] text-slate-500">{label}</span>
-      <span className="text-sm font-medium text-slate-200">{value || '—'}</span>
+      <span className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">{label}</span>
+      <span className="text-sm font-medium text-neutral-200">{value || '—'}</span>
     </div>
   )
 }

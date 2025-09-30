@@ -182,8 +182,8 @@ export function SignInForm({ audience = 'client' }) {
         </form>
       ) : null}
 
-      {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-      {message ? <p className="text-sm text-emerald-400/90">{message}</p> : null}
+      {error ? <p className="text-sm text-neutral-300">{error}</p> : null}
+      {message ? <p className="text-sm text-neutral-200/90">{message}</p> : null}
     </div>
   )
 }

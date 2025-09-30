@@ -76,25 +76,25 @@ export default function ReviewPage() {
 
   return (
     <main className="space-y-10">
-      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(9,10,14,0.55)] backdrop-blur-2xl">
+      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
         <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,_rgba(245,245,245,0.14),_transparent_70%)]" aria-hidden="true" />
         <div className="relative space-y-4">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-primary/80">
             Review Console
           </span>
           <h1 className="text-3xl font-semibold text-white">Submission Review</h1>
-          <p className="max-w-3xl text-sm text-slate-300/90">
+          <p className="max-w-3xl text-sm text-neutral-300/90">
             Inspect project requests, confirm details, and move them into the delivery pipeline. Approving an item makes it visible on the projects page.
           </p>
         </div>
       </header>
 
-      {loading ? (
-        <p className="text-sm text-slate-400">Loading submissions…</p>
-      ) : error ? (
-        <p className="text-sm text-rose-400">{error}</p>
+        {loading ? (
+          <p className="text-sm text-neutral-400">Loading submissions…</p>
+        ) : error ? (
+          <p className="text-sm text-neutral-300">{error}</p>
       ) : submissions.length === 0 ? (
-        <div className="rounded-[28px] border border-dashed border-white/15 bg-white/5 p-8 text-sm text-slate-400">
+        <div className="rounded-[28px] border border-dashed border-white/15 bg-white/5 p-8 text-sm text-neutral-400">
           No submissions yet. Once requests are submitted, they will appear here for review.
         </div>
       ) : (
@@ -102,7 +102,7 @@ export default function ReviewPage() {
           {submissions.map((submission) => (
             <article
               key={submission.id}
-              className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/10 p-6 shadow-[0_28px_72px_rgba(9,10,14,0.55)] transition duration-300 hover:border-white/20 hover:shadow-[0_36px_96px_rgba(9,10,14,0.62)]"
+              className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/10 p-6 shadow-[0_28px_72px_rgba(0,0,0,0.55)] transition duration-300 hover:border-white/20 hover:shadow-[0_36px_96px_rgba(0,0,0,0.62)]"
             >
               <div className="absolute right-6 top-6 h-10 w-10 rounded-full bg-white/10 blur-2xl opacity-0 transition duration-300 group-hover:opacity-100" aria-hidden="true" />
               <header className="relative flex flex-wrap items-start justify-between gap-4">
@@ -110,7 +110,7 @@ export default function ReviewPage() {
                   <h2 className="text-lg font-semibold text-white">
                     {submission.metadata?.projectTitle ?? submission.name}
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-neutral-400">
                     {submission.metadata?.clientName ? `${submission.metadata.clientName} • ` : ''}
                     {submission.email}
                   </p>
@@ -118,15 +118,15 @@ export default function ReviewPage() {
                 <StatusPill status={submission.status} />
               </header>
 
-              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-slate-200/90">{submission.details}</p>
+              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-neutral-200/90">{submission.details}</p>
 
-              <div className="mt-6 space-y-2 text-xs text-slate-400">
+              <div className="mt-6 space-y-2 text-xs text-neutral-400">
                 {submission.metadata?.projectType ? <p>Project type: {submission.metadata.projectType}</p> : null}
                 {submission.metadata?.budget ? <p>Investment: {submission.metadata.budget}</p> : null}
                 {submission.metadata?.keyMoment ? <p>Key moment: {submission.metadata.keyMoment}</p> : null}
                 {Array.isArray(submission.metadata?.references) && submission.metadata.references.length ? (
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Reference links</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-400">Reference links</p>
                     <ul className="mt-2 space-y-1 text-xs">
                       {submission.metadata.references.map((file, index) => (
                         <li key={`${file.url}-${index}`} className="truncate">
@@ -140,7 +140,7 @@ export default function ReviewPage() {
                 ) : null}
               </div>
 
-              <footer className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+              <footer className="mt-6 flex flex-wrap items-center gap-4 text-xs text-neutral-500">
                 <p>Submitted {new Date(submission.createdAt).toLocaleString()}</p>
                 <p>Updated {new Date(submission.updatedAt).toLocaleString()}</p>
               </footer>
@@ -154,12 +154,12 @@ export default function ReviewPage() {
                 >
                   Accept
                 </button>
-                <button
-                  type="button"
-                  disabled={submission.status !== 'pending' || processingId === submission.id}
-                  onClick={() => handleDecision(submission.id, 'rejected')}
-                  className="min-w-[140px] justify-center bg-gradient-to-br from-rose-500/80 via-rose-500/70 to-rose-600/70 text-rose-50 shadow-[0_15px_40px_rgba(244,63,94,0.3)] hover:shadow-[0_20px_60px_rgba(244,63,94,0.4)]"
-                >
+                  <button
+                    type="button"
+                    disabled={submission.status !== 'pending' || processingId === submission.id}
+                    onClick={() => handleDecision(submission.id, 'rejected')}
+                    className="min-w-[140px] justify-center bg-neutral-900 text-neutral-100 shadow-[0_15px_40px_rgba(0,0,0,0.3)] transition hover:bg-neutral-800 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)]"
+                  >
                   Reject
                 </button>
               </div>
@@ -168,7 +168,7 @@ export default function ReviewPage() {
         </section>
       )}
 
-      {actionError ? <p className="text-sm text-rose-400">{actionError}</p> : null}
+        {actionError ? <p className="text-sm text-neutral-300">{actionError}</p> : null}
     </main>
   )
 }
