@@ -468,7 +468,7 @@ export function IntakeForm() {
                   <p>We saved your answers. Please sign in to submit your request.</p>
                 </div>
               ) : null}
-                {error ? <p className="text-sm text-neutral-300">{error}</p> : null}
+              {error ? <p className="text-sm text-neutral-300">{error}</p> : null}
             </div>
             <div className="flex items-center gap-2">
               {step > 0 ? (
@@ -583,22 +583,33 @@ function FormBlock({ title, description, children }) {
   )
 }
 
+/**
+ * IMPORTANT FIX:
+ * - Replace the <label> wrapper with a neutral <div role="group"> wrapper.
+ * - This prevents the first option/button inside from being implicitly associated with the label,
+ *   which was causing the “top option highlights on hover” behavior.
+ */
 function Field({ label, hint, children, required, error }) {
   const control =
     isValidElement(children)
       ? cloneElement(children, {
           className: clsx(
             'w-full',
-              error ? 'border-neutral-500/60 focus:border-neutral-400/70 focus:ring-neutral-400/30' : '',
+            error ? 'border-neutral-500/60 focus:border-neutral-400/70 focus:ring-neutral-400/30' : '',
             children.props.className
           )
         })
       : children
 
+  const headingId = useMemo(
+    () => `field-${Math.random().toString(36).slice(2, 9)}`,
+    []
+  )
+
   return (
-    <label className="flex flex-col gap-3">
+    <div role="group" aria-labelledby={headingId} className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
+        <span id={headingId} className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
           {label}
           {required ? <span className="text-white/50"> *</span> : null}
         </span>
@@ -611,8 +622,8 @@ function Field({ label, hint, children, required, error }) {
         )}
       </div>
       {control}
-        {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
-    </label>
+      {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
+    </div>
   )
 }
 
@@ -737,7 +748,7 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" role="group" aria-label={label}>
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
           {label}
@@ -758,11 +769,11 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
             {value.map((file, index) => (
               <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3">
                 <span className="truncate">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeFile(index)}
-                    className="text-neutral-300 hover:text-neutral-200"
-                  >
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="text-neutral-300 hover:text-neutral-200"
+                >
                   Remove
                 </button>
               </li>
@@ -772,7 +783,7 @@ function FileUploadField({ label, hint, value, onChange, multiple = true, requir
           <p className="text-xs text-white/50">No files added yet.</p>
         )}
       </div>
-        {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
+      {error ? <span className="text-xs text-neutral-300">{error}</span> : null}
     </div>
   )
 }
