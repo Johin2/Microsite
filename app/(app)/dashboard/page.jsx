@@ -22,27 +22,12 @@ export default async function DashboardPage({ searchParams }) {
   return (
     <div className="space-y-12">
       <section className="grid gap-6 md:grid-cols-3">
-        <MetricCard
-          title="Active engagements"
-          value={total}
-          description="Briefs currently in motion"
-          accent="from-white/18 via-white/8 to-transparent"
-        />
-        <MetricCard
-          title="Awaiting review"
-          value={pending.length}
-          description="Discovery call or scope confirmation"
-          accent="from-white/14 via-white/6 to-transparent"
-        />
-        <MetricCard
-          title="Greenlit"
-          value={accepted.length}
-          description="Moving through production and launch"
-          accent="from-white/16 via-white/7 to-transparent"
-        />
+        <MetricCard title="Active engagements" value={total} description="Briefs currently in motion" />
+        <MetricCard title="Awaiting review" value={pending.length} description="Discovery call or scope confirmation" />
+        <MetricCard title="Greenlit" value={accepted.length} description="Moving through production and launch" />
       </section>
 
-      <section className="overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+      <section className="overflow-hidden rounded-[32px] border border-white/10 bg-neutral-900 shadow-[0_34px_82px_rgba(0,0,0,0.55)]">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-8 py-6">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold text-white">Submission portfolio</h2>
@@ -51,14 +36,14 @@ export default async function DashboardPage({ searchParams }) {
           </div>
           <Link
             href="/new"
-            className="rounded-full border border-white/15 bg-white/90 px-5 py-2 text-sm font-semibold text-[#111216] transition hover:bg-white"
+            className="rounded-full border border-white/15 bg-white px-5 py-2 text-sm font-semibold text-black transition hover:bg-neutral-100"
           >
             + New Engagement
           </Link>
         </header>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/12">
-            <thead className="bg-white/10 text-xs uppercase tracking-[0.28em] text-white/70">
+            <thead className="bg-black text-xs uppercase tracking-[0.28em] text-white/70">
               <tr>
                 <th className="px-8 py-4 text-left">Project</th>
                 <th className="px-8 py-4 text-left">Type</th>
@@ -70,7 +55,7 @@ export default async function DashboardPage({ searchParams }) {
             </thead>
             <tbody className="divide-y divide-white/8 text-sm text-neutral-200/85">
               {filtered.map((submission) => (
-                <tr key={submission.id} className="transition duration-200 hover:bg-white/[0.06]">
+                <tr key={submission.id} className="transition duration-200 hover:bg-white/10">
                   <td className="px-8 py-5">
                     <Link className="font-semibold text-white hover:text-primary" href={`/projects/${submission.id}`}>
                       {submission.metadata?.projectTitle ?? submission.name}
@@ -97,13 +82,13 @@ export default async function DashboardPage({ searchParams }) {
                     <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/projects/${submission.id}`}
-                        className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/70 transition hover:bg-white/20 hover:text-white"
+                        className="rounded-full border border-white/15 bg-black px-3 py-1 text-xs font-semibold text-white/80 transition hover:bg-white hover:text-black"
                       >
                         Review
                       </Link>
                       <Link
                         href={`/projects/${submission.id}/plan`}
-                        className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/70 transition hover:bg-white/20 hover:text-white"
+                        className="rounded-full border border-white/15 bg-black px-3 py-1 text-xs font-semibold text-white/80 transition hover:bg-white hover:text-black"
                       >
                         Open Plan
                       </Link>
@@ -122,7 +107,7 @@ export default async function DashboardPage({ searchParams }) {
           </table>
         </div>
         {rejected.length ? (
-          <footer className="border-t border-white/10 bg-white/5 px-8 py-5 text-xs text-neutral-400">
+          <footer className="border-t border-white/10 bg-black px-8 py-5 text-xs text-neutral-400">
             {rejected.length} request{rejected.length === 1 ? '' : 's'} marked as rejected remain hidden from the projects gallery.
           </footer>
         ) : null}
@@ -131,15 +116,12 @@ export default async function DashboardPage({ searchParams }) {
   )
 }
 
-function MetricCard({ title, value, description, accent }) {
+function MetricCard({ title, value, description }) {
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/10 p-6 shadow-[0_28px_70px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition duration-300 hover:border-white/20 hover:shadow-[0_34px_88px_rgba(0,0,0,0.58)]">
-      <div className={`absolute inset-0 bg-gradient-to-br ${accent}`} aria-hidden="true" />
-      <div className="relative space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">{title}</p>
-        <p className="text-4xl font-semibold text-white">{value}</p>
-        <p className="text-xs text-white/60">{description}</p>
-      </div>
+    <div className="overflow-hidden rounded-[28px] border border-white/10 bg-neutral-900 p-6 shadow-[0_28px_70px_rgba(0,0,0,0.5)] transition duration-300 hover:border-white/20 hover:shadow-[0_34px_88px_rgba(0,0,0,0.58)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">{title}</p>
+      <p className="text-4xl font-semibold text-white">{value}</p>
+      <p className="text-xs text-white/60">{description}</p>
     </div>
   )
 }
@@ -168,7 +150,7 @@ function Filters({ filters }) {
         <option value="Launch strategy">Launch strategy</option>
         <option value="other">Other</option>
       </select>
-      <button type="submit" className="rounded-full border border-white/15 bg-white/10 px-3 py-2 text-white/70">
+      <button type="submit" className="rounded-full border border-white/15 bg-black px-3 py-2 text-white/80">
         Apply
       </button>
     </form>

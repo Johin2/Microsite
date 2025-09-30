@@ -50,9 +50,8 @@ export default async function TaskPage({ params }) {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-        <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,_rgba(245,245,245,0.14),_transparent_70%)]" aria-hidden="true" />
-        <div className="relative flex flex-wrap items-start justify-between gap-6">
+      <header className="rounded-[32px] border border-white/10 bg-neutral-900 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)]">
+        <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Task</p>
             <h1 className="text-3xl font-semibold text-white">{task.title}</h1>
@@ -81,7 +80,7 @@ export default async function TaskPage({ params }) {
       </header>
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h2 className="text-lg font-semibold text-white">Acceptance Tests</h2>
           {acceptance.length ? (
             <ul className="mt-4 space-y-3">
@@ -96,7 +95,7 @@ export default async function TaskPage({ params }) {
             <p className="mt-4 text-sm text-neutral-500">No acceptance tests recorded.</p>
           )}
         </article>
-        <article className="rounded-[28px] border border-white/10 bg-gradient-to-br from-black/95 via-neutral-950/90 to-neutral-900/95 p-6 text-sm text-neutral-200/85 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/85 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h2 className="text-lg font-semibold text-white">Agent run log</h2>
           <p className="mt-3 text-sm text-neutral-300/85">
             Every run triggers the DevOps runner, QA/Test agent, and auto-repair loop. Completed runs and previews surface below.
@@ -104,7 +103,7 @@ export default async function TaskPage({ params }) {
         </article>
       </section>
 
-      <section className="rounded-[32px] border border-white/10 bg-white/10 p-6 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+      <section className="rounded-[32px] border border-white/10 bg-neutral-900 p-6 shadow-[0_34px_82px_rgba(0,0,0,0.55)]">
         <h2 className="text-lg font-semibold text-white">Run Timeline</h2>
         <div className="mt-6">
           <RunTimeline runs={runData} />

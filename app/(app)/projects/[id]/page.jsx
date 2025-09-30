@@ -20,9 +20,8 @@ export default async function ProjectPage({ params }) {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-        <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,_rgba(245,245,245,0.14),_transparent_70%)]" aria-hidden="true" />
-        <div className="relative flex flex-wrap items-start justify-between gap-8">
+      <header className="rounded-[32px] border border-white/10 bg-neutral-900 p-8 shadow-[0_34px_82px_rgba(0,0,0,0.55)]">
+        <div className="flex flex-wrap items-start justify-between gap-8">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-semibold text-white sm:text-4xl">
@@ -52,11 +51,11 @@ export default async function ProjectPage({ params }) {
       </header>
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h2 className="text-lg font-semibold text-white">Request details</h2>
           <p className="mt-4 whitespace-pre-line leading-relaxed text-neutral-300/90">{submission.details}</p>
         </article>
-        <article className="space-y-4 rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="space-y-4 rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Project metadata</h3>
           <Metadata label="Company" value={submission.metadata?.company ?? '—'} />
           <Metadata label="Contact" value={submission.email} />
@@ -68,7 +67,7 @@ export default async function ProjectPage({ params }) {
       </section>
 
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-[28px] border border-white/10 bg-white/10 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/90 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Reference links</h3>
           {Array.isArray(submission.metadata?.references) && submission.metadata.references.length ? (
             <ul className="mt-4 space-y-2">
@@ -84,7 +83,7 @@ export default async function ProjectPage({ params }) {
             <p className="mt-4 text-xs text-neutral-500">No attachments provided.</p>
           )}
         </article>
-        <article className="space-y-4 rounded-[28px] border border-white/10 bg-gradient-to-br from-black/95 via-neutral-950/90 to-neutral-900/95 p-6 text-sm text-neutral-200/85 shadow-[0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+        <article className="space-y-4 rounded-[28px] border border-white/10 bg-neutral-900 p-6 text-sm text-neutral-200/85 shadow-[0_28px_72px_rgba(0,0,0,0.55)]">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-neutral-400">Next steps</h3>
           <ul className="space-y-3 text-sm text-neutral-300/90">
             <li className="flex items-start gap-3">

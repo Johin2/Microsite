@@ -9,10 +9,7 @@
 @layer base {
   body {
     @apply font-sans bg-black text-neutral-100 antialiased;
-    background-image: radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.08), transparent 60%),
-      radial-gradient(circle at 80% 12%, rgba(255, 255, 255, 0.06), transparent 55%),
-      linear-gradient(160deg, rgba(0, 0, 0, 0.96), rgba(20, 20, 20, 0.98));
-    background-attachment: fixed;
+    background-color: #000;
   }
 
   * {
