@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { createSubmission, listSubmissions } from '@/lib/submission-store'
+import { createServerSupabaseClient } from '@lib/supabase'
 
 export async function GET() {
   const submissions = await listSubmissions()
@@ -12,6 +13,25 @@ export async function POST(request) {
 
   if (!payload || typeof payload !== 'object') {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  let supabase
+  try {
+    supabase = createServerSupabaseClient()
+  } catch (error) {
+    console.warn('Unable to create Supabase server client for submissions.', error)
+    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  }
+
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  if (authError) {
+    console.warn('Failed to load user session for submissions.', authError)
+    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
+  }
+
+  const user = authData?.user ?? null
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
   }
 
   const { name, email, details } = payload

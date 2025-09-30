@@ -2,7 +2,7 @@
 
 import clsx from 'clsx'
 import Link from 'next/link'
-import { cloneElement, isValidElement, useMemo, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useMemo, useState } from 'react'
 
 const defaultForm = {
   clientName: '',
@@ -46,6 +46,9 @@ export function IntakeForm() {
   const [step, setStep] = useState(0)
   const [stepErrors, setStepErrors] = useState({})
   const [showSuccess, setShowSuccess] = useState(false)
+  const [authRequired, setAuthRequired] = useState(false)
+  const [draftReady, setDraftReady] = useState(false)
+  const [signInHref, setSignInHref] = useState('/sign-in?next=/')
 
   const sections = useMemo(
     () => [
@@ -68,6 +71,61 @@ export function IntakeForm() {
     []
   )
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const next = `${window.location.pathname}${window.location.search}${window.location.hash}` || '/'
+    setSignInHref(`/sign-in?next=${encodeURIComponent(next)}`)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const stored = window.sessionStorage.getItem('intake-form-draft')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed && typeof parsed === 'object') {
+          setForm((prev) => ({ ...prev, ...parsed }))
+        }
+      }
+      const storedStep = window.sessionStorage.getItem('intake-form-step')
+      if (storedStep !== null) {
+        const parsedStep = Number.parseInt(storedStep, 10)
+        if (!Number.isNaN(parsedStep)) {
+          setStep((current) => {
+            if (Number.isNaN(current)) return 0
+            return Math.min(Math.max(parsedStep, 0), sections.length - 1)
+          })
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to restore intake form draft', err)
+    } finally {
+      setDraftReady(true)
+    }
+  }, [sections.length])
+
+  useEffect(() => {
+    if (!draftReady || typeof window === 'undefined') return
+    try {
+      const isDefault = JSON.stringify(form) === JSON.stringify(defaultForm)
+      if (isDefault) {
+        window.sessionStorage.removeItem('intake-form-draft')
+      } else {
+        window.sessionStorage.setItem('intake-form-draft', JSON.stringify(form))
+      }
+    } catch (err) {
+      console.warn('Failed to persist intake form draft', err)
+    }
+  }, [form, draftReady])
+
+  useEffect(() => {
+    if (!draftReady || typeof window === 'undefined') return
+    try {
+      window.sessionStorage.setItem('intake-form-step', String(step))
+    } catch (err) {
+      console.warn('Failed to persist intake form step', err)
+    }
+  }, [step, draftReady])
   function goToStep(next) {
     setStepErrors({})
     setStep((current) => {
@@ -139,6 +197,7 @@ export function IntakeForm() {
     event.preventDefault()
     setError(null)
     setShowSuccess(false)
+    setAuthRequired(false)
 
     // Ensure all steps are valid before submitting (users might edit earlier steps)
     function validateAll() {
@@ -179,6 +238,18 @@ export function IntakeForm() {
         })
       })
 
+      if (response.status === 401) {
+        setAuthRequired(true)
+        try {
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem('intake-form-draft', JSON.stringify(form))
+          }
+        } catch (err) {
+          console.warn('Failed to persist draft before redirect prompt', err)
+        }
+        return
+      }
+
       if (!response.ok) {
         const payload = await response.json().catch(() => null)
         const message = payload && typeof payload === 'object' && 'error' in payload ? payload.error : null
@@ -191,6 +262,15 @@ export function IntakeForm() {
       setStep(sections.length - 1)
       setStepErrors({})
       setShowSuccess(true)
+      setAuthRequired(false)
+      try {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('intake-form-draft')
+          window.sessionStorage.removeItem('intake-form-step')
+        }
+      } catch (err) {
+        console.warn('Failed to clear intake form draft after submission', err)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit project')
     } finally {
@@ -233,7 +313,15 @@ export function IntakeForm() {
             Our concierge will connect within one business day with next steps and scheduling options.
           </p>
           <div className="flex items-center gap-3">
-            {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+            <div className="flex flex-col items-start gap-1 text-left">
+              {authRequired ? (
+                <div className="text-xs text-amber-300">
+                  <p className="font-semibold text-amber-200">Sign in required</p>
+                  <p>We saved your answers. Please sign in to submit your request.</p>
+                </div>
+              ) : null}
+              {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+            </div>
             <div className="flex items-center gap-2">
               {step > 0 ? (
                 <button
@@ -267,6 +355,21 @@ export function IntakeForm() {
           </div>
         </div>
       </form>
+
+      {authRequired ? (
+        <div className="rounded-[28px] border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100">
+          <p className="font-semibold">Almost there — sign in to continue.</p>
+          <p className="mt-2 text-amber-200/80">
+            We&apos;ve preserved your responses. Sign in below to submit without re-entering any details.
+          </p>
+          <Link
+            href={signInHref}
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-[#111216] hover:bg-amber-300"
+          >
+            Sign in and finish submission
+          </Link>
+        </div>
+      ) : null}
 
       <aside className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
         <header className="space-y-2">
