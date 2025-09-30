@@ -1,16 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createBrowserSupabaseClient } from '@lib/supabase-browser'
 import { isAllowedEmail } from '@lib/auth-utils'
 
-export function SignInForm() {
+const TEAM_AUDIENCES = new Set(['team', 'admin', 'internal'])
+
+export function SignInForm({ audience = 'client' }) {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [phase, setPhase] = useState('enter-email') // enter-email | enter-code | done
   const [error, setError] = useState(null)
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(false)
+  const normalizedAudience = useMemo(() => (audience || '').toLowerCase(), [audience])
+  const isTeamSignIn = TEAM_AUDIENCES.has(normalizedAudience)
+  const requiresAllowlistedEmail = isTeamSignIn
 
   function nextPath() {
     try {
@@ -32,8 +37,10 @@ export function SignInForm() {
         throw new Error('Enter your work email to continue.')
       }
 
-      if (!isAllowedEmail(trimmedEmail.toLowerCase())) {
-        throw new Error('This email is not authorized for Glassbox access.')
+      const normalized = trimmedEmail.toLowerCase()
+
+      if (requiresAllowlistedEmail && !isAllowedEmail(normalized)) {
+        throw new Error('This email is not authorized for Glassbox team access.')
       }
 
       const supabase = createBrowserSupabaseClient()
@@ -64,10 +71,12 @@ export function SignInForm() {
         throw new Error('Enter your work email to continue.')
       }
 
-      if (!isAllowedEmail(trimmedEmail.toLowerCase())) {
+      const normalized = trimmedEmail.toLowerCase()
+
+      if (requiresAllowlistedEmail && !isAllowedEmail(normalized)) {
         setPhase('enter-email')
         setCode('')
-        throw new Error('This email is not authorized for Glassbox access.')
+        throw new Error('This email is not authorized for Glassbox team access.')
       }
 
       const supabase = createBrowserSupabaseClient()
@@ -114,8 +123,14 @@ export function SignInForm() {
   return (
     <div className="mx-auto max-w-md space-y-6">
       <header className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold text-white">Sign in</h1>
-        <p className="text-sm text-white/70">Use your work email to receive a one-time code.</p>
+        <h1 className="text-2xl font-semibold text-white">
+          {isTeamSignIn ? 'Team sign in' : 'Access your workspace'}
+        </h1>
+        <p className="text-sm text-white/70">
+          {isTeamSignIn
+            ? 'Use your Glassbox email to receive a one-time code.'
+            : 'Enter the email you used when submitting your request to receive a one-time code.'}
+        </p>
       </header>
 
       {phase === 'enter-email' ? (
@@ -127,7 +142,7 @@ export function SignInForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@glassbox.studio"
+              placeholder={isTeamSignIn ? 'you@glassbox.studio' : 'you@example.com'}
             />
           </label>
           <button type="submit" disabled={loading} className="w-full justify-center">

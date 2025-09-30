@@ -68,7 +68,7 @@ function AuthButtons() {
         </>
       ) : (
         <Link
-          href="/sign-in"
+          href="/sign-in?audience=client"
           className="rounded-full border border-white/15 bg-white/90 px-4 py-1 font-semibold text-[#111216] hover:bg-white"
         >
           Sign in

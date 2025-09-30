@@ -48,7 +48,7 @@ export function IntakeForm() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [authRequired, setAuthRequired] = useState(false)
   const [draftReady, setDraftReady] = useState(false)
-  const [signInHref, setSignInHref] = useState('/sign-in?next=/')
+  const [signInHref, setSignInHref] = useState('/sign-in?audience=client&next=%2F')
 
   const sections = useMemo(
     () => [
@@ -74,7 +74,7 @@ export function IntakeForm() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const next = `${window.location.pathname}${window.location.search}${window.location.hash}` || '/'
-    setSignInHref(`/sign-in?next=${encodeURIComponent(next)}`)
+    setSignInHref(`/sign-in?audience=client&next=${encodeURIComponent(next)}`)
   }, [])
 
   useEffect(() => {

@@ -12,7 +12,7 @@ export default async function MyProjectDetailsPage({ params }) {
   const { data } = await supabase.auth.getUser()
   const user = data?.user ?? null
   if (!user?.email) {
-    redirect(`/sign-in?next=/my/${params.id}`)
+    redirect(`/sign-in?audience=client&next=/my/${params.id}`)
   }
 
   const submission = await findSubmission(params.id)
