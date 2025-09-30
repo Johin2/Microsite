@@ -27,9 +27,18 @@ export function SignInForm() {
     setMessage(null)
     setLoading(true)
     try {
+      const trimmedEmail = email.trim()
+      if (!trimmedEmail) {
+        throw new Error('Enter your work email to continue.')
+      }
+
+      if (!isAllowedEmail(trimmedEmail.toLowerCase())) {
+        throw new Error('This email is not authorized for Glassbox access.')
+      }
+
       const supabase = createBrowserSupabaseClient()
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: trimmedEmail,
         options: {
           shouldCreateUser: true
         }
@@ -50,9 +59,20 @@ export function SignInForm() {
     setMessage(null)
     setLoading(true)
     try {
+      const trimmedEmail = email.trim()
+      if (!trimmedEmail) {
+        throw new Error('Enter your work email to continue.')
+      }
+
+      if (!isAllowedEmail(trimmedEmail.toLowerCase())) {
+        setPhase('enter-email')
+        setCode('')
+        throw new Error('This email is not authorized for Glassbox access.')
+      }
+
       const supabase = createBrowserSupabaseClient()
       const { data, error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
+        email: trimmedEmail,
         token: code.trim(),
         type: 'email'
       })
