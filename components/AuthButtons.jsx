@@ -4,13 +4,27 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createBrowserSupabaseClient } from '@lib/supabase-browser'
 
+function getSupabaseClientSafe() {
+  try {
+    return createBrowserSupabaseClient()
+  } catch (error) {
+    console.warn('Supabase client unavailable in AuthButtons.', error)
+    return null
+  }
+}
+
 function AuthButtons() {
   const [email, setEmail] = useState(null)
   const [isTeam, setIsTeam] = useState(false)
   // We keep redirects simple: role-based after sign-in
 
   useEffect(() => {
-    const supabase = createBrowserSupabaseClient()
+    const supabase = getSupabaseClientSafe()
+    if (!supabase) {
+      setEmail(null)
+      setIsTeam(false)
+      return
+    }
 
     async function refreshRole(hasEmail) {
       if (!hasEmail) {
@@ -42,8 +56,10 @@ function AuthButtons() {
   }, [])
 
   async function signOut() {
-    const supabase = createBrowserSupabaseClient()
-    await supabase.auth.signOut()
+    const supabase = getSupabaseClientSafe()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     await fetch('/api/auth/session', { method: 'DELETE' })
     window.location.assign('/')
   }

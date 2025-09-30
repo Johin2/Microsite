@@ -14,7 +14,9 @@ const statusStyles = {
 }
 
 export function StatusPill({ status }) {
-  const cls = statusStyles[status] ?? 'bg-white/12 text-white/90'
+  const normalized = typeof status === 'string' && status.trim().length > 0 ? status.trim().toLowerCase() : 'pending'
+  const cls = statusStyles[normalized] ?? statusStyles.pending
+  const label = normalized.replace(/_/g, ' ')
   return (
     <span
       className={clsx(
@@ -22,7 +24,7 @@ export function StatusPill({ status }) {
         cls
       )}
     >
-      {status.replace('_', ' ')}
+      {label}
     </span>
   )
 }
