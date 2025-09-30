@@ -553,17 +553,6 @@ export function IntakeForm() {
             <p className="rounded-2xl border border-dashed border-white/12 bg-white/5 p-5 text-white/70">
               Once submitted, this panel surfaces producer assignments, scheduled touchpoints, and shared artefacts.
             </p>
-            <p>
-              Need inspiration in the meantime? Explore our{' '}
-              <Link href="/projects" className="underline">
-                active portfolio
-              </Link>{' '}
-              or the{' '}
-              <Link href="/dashboard" className="underline">
-                studio dashboard
-              </Link>
-              to see how engagements move from brief to launch.
-            </p>
           </div>
         )}
       </aside>
