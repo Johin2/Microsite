@@ -660,8 +660,10 @@ function CheckboxGrid({ options, value, onChange }) {
             key={option}
             onClick={() => onChange(toggleValue(value, option))}
             className={clsx(
-              'rounded-2xl border px-4 py-3 text-left text-sm transition',
-              checked ? 'border-white/60 bg-white/15 text-white' : 'border-white/10 bg-transparent text-white/70 hover:border-white/20'
+              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition focus-visible:!outline-none focus-visible:!ring-0 hover:!text-[#111216]',
+              checked
+                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:!bg-white'
+                : 'border-white/10 !bg-transparent text-white/70 hover:border-white/40 hover:!bg-white'
             )}
           >
             {option}
@@ -683,8 +685,10 @@ function RadioGrid({ options, value, onChange }) {
             key={option}
             onClick={() => onChange(option)}
             className={clsx(
-              'rounded-2xl border px-4 py-3 text-left text-sm transition',
-              checked ? 'border-white/60 bg-white/15 text-white' : 'border-white/10 bg-transparent text-white/70 hover:border-white/20'
+              'flex items-start justify-start rounded-2xl border px-4 py-3 text-left text-sm transition focus-visible:!outline-none focus-visible:!ring-0 hover:!text-[#111216]',
+              checked
+                ? 'border-white/60 bg-white/15 text-white hover:border-white/70 hover:!bg-white'
+                : 'border-white/10 !bg-transparent text-white/70 hover:border-white/40 hover:!bg-white'
             )}
           >
             {option}
