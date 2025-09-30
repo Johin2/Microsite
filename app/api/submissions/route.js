@@ -34,44 +34,43 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
   }
 
-  const { name, email, details } = payload
+  const { name, email: emailInput, details } = payload
   const metadata = payload.metadata && typeof payload.metadata === 'object' ? payload.metadata : {}
 
-  if (typeof name !== 'string' || typeof email !== 'string' || typeof details !== 'string') {
-    return NextResponse.json({ error: 'name, email, and details are required.' }, { status: 400 })
+  if (typeof details !== 'string') {
+    return NextResponse.json({ error: 'details is required.' }, { status: 400 })
   }
 
-  const trimmed = {
-    name: name.trim(),
-    email: email.trim(),
-    details: details.trim()
-  }
+  const trimmedDetails = details.trim()
+  const trimmedName = typeof name === 'string' ? name.trim() : ''
+  const providedEmail = typeof emailInput === 'string' ? emailInput.trim() : ''
+  const sessionEmail = typeof user.email === 'string' ? user.email.trim() : ''
+  const email = providedEmail || sessionEmail
 
-  if (!trimmed.name || !trimmed.email || !trimmed.details) {
-    return NextResponse.json({ error: 'All fields must be provided.' }, { status: 422 })
-  }
+  const metadataCampaignType =
+    typeof metadata.campaignType === 'string' ? metadata.campaignType.trim() : ''
+  const metadataCampaignTypeOther =
+    typeof metadata.campaignTypeOther === 'string' ? metadata.campaignTypeOther.trim() : ''
 
-  const references = Array.isArray(metadata.references)
-    ? metadata.references
-    : Array.isArray(metadata.attachments)
-    ? metadata.attachments
-    : []
+  const finalName = trimmedName || metadataCampaignTypeOther || metadataCampaignType || 'Campaign brief'
+
+  if (!email || !trimmedDetails) {
+    return NextResponse.json({ error: 'Email and campaign details are required.' }, { status: 422 })
+  }
 
   try {
     const submission = await createSubmission({
-      clientName: metadata.clientName ?? metadata.owner ?? trimmed.name,
-      company: metadata.company ?? null,
-      email: trimmed.email,
-      phone: metadata.phone ?? null,
-      projectTitle: metadata.projectTitle ?? trimmed.name,
-      projectType: metadata.projectType ?? metadata.categoryHint ?? null,
-      timeline: metadata.timeline ?? null,
+      clientName: metadata.clientName ?? metadata.owner ?? finalName,
+      email,
+      projectTitle: metadataCampaignTypeOther || metadata.campaignType || finalName,
+      projectType: Array.isArray(metadata.objectives) ? metadata.objectives.join(', ') : null,
+      timeline: metadata.goLiveDate ?? null,
       budget: metadata.budget ?? null,
-      projectDescription: trimmed.details,
-      keyMoment: metadata.keyMoment ?? metadata.dueDate ?? null,
-      references,
-      additionalNotes: metadata.additionalNotes ?? null,
-      referralSource: metadata.referralSource ?? null,
+      projectDescription: trimmedDetails,
+      keyMoment: metadata.goLiveDate ?? null,
+      additionalNotes: metadata.generalNotes ?? metadata.additionalNotes ?? null,
+      referralSource: metadata.ctaFocus ?? null,
+      metadata
     })
 
     return NextResponse.json({ submission }, { status: 201 })
